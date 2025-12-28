@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecrafteanos | Sistema de Cuentas</title>
+    <!-- Librerías para Chat P2P y Cuentas Criptográficas -->
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
+    <style>
+        :root { --mc-green: #388E3C; --mc-dark: #1e1e1e; --mc-border: #000; }
+        body { background: var(--mc-dark); color: white; font-family: 'Courier New', monospace; margin: 0; }
+        
+        /* Pantallas */
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .active { display: flex; }
+
+        /* Estilo Minecraft */
+        .mc-card { background: #333; border: 4px solid var(--mc-border); padding: 25px; width: 300px; box-shadow: 6px 6px 0px #000; }
+        input { background: #000; border: 2px solid #555; color: #0f0; padding: 10px; margin: 5px 0; width: 90%; outline: none; }
+        button { background: var(--mc-green); border: 2px solid #1B5E20; color: white; padding: 10px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
+        button:hover { background: #45a049; }
+        .secondary { background: #555; border-color: #333; margin-top: 5px; font-size: 11px; }
+
+        /* Chat UI */
+        #chat-ui { display: none; flex-direction: column; height: 100vh; }
+        header { background: var(--mc-green); padding: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #000; }
+        #msg-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
+        .msg { background: #444; padding: 8px 12px; border-left: 4px solid var(--mc-green); }
+        .msg b { color: #81C784; font-size: 0.9em; }
+        .input-bar { background: #111; padding: 15px; display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- PANTALLA DE INICIO / LOGIN -->
+    <div id="auth-screen" class="screen active">
+        <div class="mc-card">
+            <h1 style="color:var(--mc-green); margin-top:0;">MINECAFTEANOS</h1>
+            <div id="auth-form">
+                <input type="text" id="alias" placeholder="Usuario (Ej: Steve)">
+                <input type="password" id="pass" placeholder="Contraseña">
+                <button onclick="login()">INICIAR SESIÓN</button>
+                <button class="secondary" onclick="register()">CREAR CUENTA NUEVA</button>
+            </div>
+            <p id="status-text" style="font-size: 12px; color: #aaa; margin-top:15px;"></p>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE CHAT -->
+    <div id="chat-ui">
+        <header>
+            <span id="welcome-user">Cargando...</span>
+            <button onclick="location.reload()" style="width:auto; padding:5px 10px; font-size:10px;">SALIR</button>
+        </header>
+        <div id="msg-box"></div>
+        <div class="input-bar">
+            <input type="text" id="msg-input" placeholder="Habla con el grupo..." onkeypress="if(event.key==='Enter') send()">
+            <button onclick="send()" style="width:80px">ENVIAR</button>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar Gun y el Sistema de Seguridad (SEA)
+        // Usamos varios repetidores públicos para asegurar que los datos viajen entre usuarios
+        const gun = Gun([
+            'https://gun-manhattan.herokuapp.com/gun',
+            'https://peer.wall.org/gun'
+        ]);
+        const user = gun.user().recall({storage: true});
+        const chatData = gun.get('minecrafteanos_p2p_v2');
+
+        // --- FUNCIONES DE CUENTA ---
+
+        function register() {
+            const alias = document.getElementById('alias').value;
+            const pass = document.getElementById('pass').value;
+            if(alias.length < 3) return alert("Usuario muy corto");
+            
+            user.create(alias, pass, (ack) => {
+                if(ack.err) alert(ack.err);
+                else {
+                    document.getElementById('status-text').innerText = "¡Cuenta creada! Haz clic en Iniciar Sesión.";
+                    alert("Cuenta creada con éxito");
+                }
+            });
+        }
+
+        function login() {
+            const alias = document.getElementById('alias').value;
+            const pass = document.getElementById('pass').value;
+            
+            user.auth(alias, pass, (ack) => {
+                if(ack.err) alert("Error: " + ack.err);
+                else {
+                    showChat(alias);
+                }
+            });
+        }
+
+        // --- FUNCIONES DE CHAT ---
+
+        function showChat(alias) {
+            document.getElementById('auth-screen').classList.remove('active');
+            document.getElementById('chat-ui').style.display = 'flex';
+            document.getElementById('welcome-user').innerText = "Jugador: " + alias;
+            
+            // Escuchar mensajes
+            chatData.map().once((data, id) => {
+                if(data && data.msg) {
+                    renderMsg(data);
+                }
+            });
+        }
+
+        function send() {
+            const input = document.getElementById('msg-input');
+            if(!input.value.trim()) return;
+
+            // Guardar mensaje con el nombre del usuario logueado
+            chatData.set({
+                msg: input.value,
+                sender: user.is.alias,
+                time: Date.now()
+            });
+            input.value = "";
+        }
+
+        function renderMsg(data) {
+            const box = document.getElementById('msg-box');
+            const div = document.createElement('div');
+            div.className = 'msg';
+            div.innerHTML = `<b>${data.sender}:</b> <span>${data.msg}</span>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // Auto-login si ya tenía sesión en este navegador
+        if(user.is) {
+            showChat(user.is.alias);
+        }
+    </script>
+</body>
+</html>
