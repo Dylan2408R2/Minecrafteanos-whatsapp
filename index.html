@@ -3,246 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecrafteanos | Pro Chat</title>
+    <title>Minecrafteanos | Oficial</title>
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
     <style>
         :root {
-            --primary: #388E3C;
-            --bg: #121212;
-            --panel: #1e1e1e;
-            --text: #e0e0e0;
-            --accent: #81C784;
+            --mc-green: #388E3C;
+            --mc-dark: #121212;
+            --mc-panel: #1e1e1e;
+            --mc-text: #ffffff;
+            --mc-accent: #81C784;
         }
 
-        body, html { 
-            margin: 0; padding: 0; height: 100%; 
-            background: var(--bg); color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        body { 
+            background: var(--mc-dark); color: var(--mc-text); 
+            font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; 
+            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
         /* --- LOGIN --- */
         #auth-screen {
-            display: flex; align-items: center; justify-content: center; height: 100vh;
+            position: fixed; inset: 0; z-index: 1000; background: #000;
+            display: flex; align-items: center; justify-content: center;
             background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://wallpaperaccess.com/full/46664.jpg');
             background-size: cover;
         }
+        .auth-card { background: var(--mc-panel); padding: 30px; border-radius: 12px; text-align: center; width: 300px; border: 1px solid #333; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: var(--mc-green); color: white; font-weight: bold; cursor: pointer; }
 
-        .auth-card {
-            background: var(--panel); padding: 40px; border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 320px; text-align: center;
-            border: 1px solid #333;
-        }
+        /* --- LAYOUT --- */
+        header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 2px solid #000; }
+        nav { display: flex; gap: 15px; background: #252525; padding: 10px 20px; border-bottom: 1px solid #333; }
+        nav span { cursor: pointer; font-weight: bold; color: #888; }
+        nav span.active { color: var(--mc-green); border-bottom: 2px solid var(--mc-green); }
 
-        .auth-card h1 { color: var(--primary); margin-bottom: 25px; font-size: 24px; letter-spacing: 2px; }
+        .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; }
+        .content-area.active { display: block; }
 
-        input[type="text"], input[type="password"] {
-            width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px;
-            border: 1px solid #333; background: #000; color: #fff; box-sizing: border-box;
-        }
+        /* --- NOTICIAS --- */
+        .admin-only { background: #2e3d2e; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; border: 1px solid var(--mc-green); }
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .news-card { background: var(--mc-panel); border-radius: 10px; overflow: hidden; border: 1px solid #333; cursor: pointer; transition: 0.3s; }
+        .news-card:hover { transform: translateY(-5px); border-color: var(--mc-green); }
+        .news-card img { width: 100%; height: 160px; object-fit: cover; }
+        .news-card h3 { padding: 15px; margin: 0; font-size: 18px; }
+        .news-card .desc { padding: 0 15px 15px; color: #aaa; font-size: 14px; display: none; } /* Se muestra al hacer click */
 
-        button {
-            width: 100%; padding: 12px; border: none; border-radius: 6px;
-            background: var(--primary); color: white; font-weight: bold;
-            cursor: pointer; transition: 0.3s; margin-top: 10px;
-        }
+        /* --- CHAT --- */
+        #chat-messages { display: flex; flex-direction: column; gap: 10px; }
+        .msg { background: #252525; padding: 10px; border-radius: 8px; max-width: 80%; }
+        .msg b { color: var(--mc-accent); font-size: 12px; }
 
-        button:hover { filter: brightness(1.2); transform: translateY(-2px); }
-
-        /* --- CHAT APP --- */
-        #app { display: none; grid-template-rows: 60px 1fr auto; height: 100vh; }
-
-        header {
-            background: var(--panel); display: flex; align-items: center; 
-            justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #333;
-        }
-
-        #chat-window {
-            overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px;
-            background: #151515;
-        }
-
-        .message {
-            background: #252525; padding: 10px 15px; border-radius: 10px;
-            max-width: 70%; position: relative; align-self: flex-start;
-            border-bottom: 2px solid #333;
-        }
-
-        .message.me { align-self: flex-end; background: #2e4a2e; border-bottom: 2px solid var(--primary); }
-
-        .message .user { display: block; font-size: 11px; color: var(--accent); font-weight: bold; margin-bottom: 4px; }
-
-        .message img { max-width: 100%; border-radius: 8px; margin-top: 10px; display: block; }
-
-        /* --- INPUT AREA --- */
-        .input-area {
-            background: var(--panel); padding: 15px 20px; border-top: 1px solid #333;
-            display: flex; flex-direction: column; gap: 5px;
-        }
-
-        .controls { display: flex; gap: 10px; align-items: center; }
-
-        #typing-indicator { font-size: 12px; color: #888; height: 15px; margin-left: 5px; }
-
-        .btn-icon { width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; background: #333; }
-
-        #msg-input { flex: 1; padding: 12px; border-radius: 6px; border: none; background: #111; color: white; }
-
-        /* Stickers Panel */
-        .stickers { display: flex; gap: 10px; padding-bottom: 10px; overflow-x: auto; }
-        .sticker { width: 50px; height: 50px; cursor: pointer; transition: 0.2s; }
-        .sticker:hover { transform: scale(1.2); }
+        /* --- MUSIC PLAYER --- */
+        #music-bar { background: #000; padding: 10px 20px; display: flex; align-items: center; gap: 20px; border-top: 1px solid #333; }
+        audio { height: 30px; filter: invert(1); }
 
     </style>
 </head>
 <body>
 
-    <!-- Pantalla Auth -->
+    <!-- LOGIN -->
     <div id="auth-screen">
         <div class="auth-card">
-            <h1>MINECAFTEANOS</h1>
-            <input type="text" id="username" placeholder="Usuario">
-            <input type="password" id="password" placeholder="Contraseña">
+            <h1 style="color:var(--mc-green)">MINECAFTEANOS</h1>
+            <input type="text" id="user-alias" placeholder="Usuario">
+            <input type="password" id="user-pass" placeholder="Contraseña">
             <button onclick="auth('login')">ENTRAR</button>
-            <button onclick="auth('register')" style="background:#444; font-size:12px">CREAR CUENTA</button>
+            <button onclick="auth('register')" style="background:#444; margin-top:10px; font-size:12px">CREAR CUENTA</button>
         </div>
     </div>
 
-    <!-- Pantalla App -->
-    <div id="app">
-        <header>
-            <div style="display:flex; align-items:center; gap:10px">
-                <div style="width:12px; height:12px; border-radius:50%; background:#4CAF50"></div>
-                <strong>Minecrafteanos Server</strong>
-            </div>
-            <button onclick="location.reload()" style="width:auto; padding:5px 15px; background:#cc0000">SALIR</button>
-        </header>
+    <!-- HEADER & NAV -->
+    <header>
+        <strong>MINECAFTEANOS <span id="user-tag" style="color:var(--mc-accent); font-size:12px"></span></strong>
+        <button onclick="location.reload()" style="width:auto; padding:5px 10px; background:#aa0000">SALIR</button>
+    </header>
+    <nav>
+        <span id="nav-news" class="active" onclick="switchTab('news')">INICIO / NOTICIAS</span>
+        <span id="nav-chat" onclick="switchTab('chat')">CHAT GLOBAL</span>
+    </nav>
 
-        <div id="chat-window"></div>
-
-        <div class="input-area">
-            <div id="typing-indicator"></div>
-            
-            <!-- Stickers simples -->
-            <div class="stickers">
-                <img class="sticker" src="https://minecraft.wiki/images/Creeper_Face_JE1_BE1.png" onclick="sendSticker(this.src)">
-                <img class="sticker" src="https://minecraft.wiki/images/Invoker_Face.png" onclick="sendSticker(this.src)">
-                <img class="sticker" src="https://minecraft.wiki/images/Diamond_JE3_BE3.png" onclick="sendSticker(this.src)">
-            </div>
-
-            <div class="controls">
-                <input type="file" id="img-input" hidden accept="image/*" onchange="sendImage(this)">
-                <button class="btn-icon" onclick="document.getElementById('img-input').click()">📷</button>
-                <input type="text" id="msg-input" placeholder="Escribe un mensaje..." oninput="isTyping()" onkeypress="if(event.key==='Enter') sendText()">
-                <button onclick="sendText()" style="width:100px; margin:0">ENVIAR</button>
-            </div>
+    <!-- SECCIÓN NOTICIAS -->
+    <div id="tab-news" class="content-area active">
+        <!-- Panel exclusivo para Dylan2408R2 -->
+        <div id="admin-panel" class="admin-only">
+            <h4 style="margin-top:0">Publicar Nueva Noticia (Admin)</h4>
+            <input type="text" id="news-title" placeholder="Título de la noticia">
+            <input type="text" id="news-img" placeholder="URL de la Imagen (Link)">
+            <textarea id="news-desc" style="width:100%; background:#000; color:white; border:1px solid #444; border-radius:6px; padding:10px; box-sizing:border-box" rows="3" placeholder="Descripción completa..."></textarea>
+            <button onclick="postNews()" style="margin-top:10px">PUBLICAR</button>
         </div>
+
+        <div id="news-container" class="news-grid">
+            <!-- Las noticias aparecerán aquí -->
+        </div>
+    </div>
+
+    <!-- SECCIÓN CHAT -->
+    <div id="tab-chat" class="content-area">
+        <div id="chat-messages"></div>
+        <div style="position:fixed; bottom:70px; left:0; right:0; padding:15px; background:var(--mc-panel); display:flex; gap:10px">
+            <input type="text" id="chat-input" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
+            <button onclick="sendChat()" style="width:100px">ENVIAR</button>
+        </div>
+    </div>
+
+    <!-- MUSIC PLAYER -->
+    <div id="music-bar">
+        <span style="font-size:12px; color:var(--mc-accent)">♫ Minecraft OST</span>
+        <audio id="player" controls loop>
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+            <!-- Puedes cambiar este link por cualquier archivo .mp3 directo de internet -->
+        </audio>
     </div>
 
     <script>
-        // Configurar Gun.js con repetidores públicos para que los cambios se guarden
         const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun']);
         const user = gun.user().recall({storage: true});
-        const chat = gun.get('minecrafteanos_pro_v3');
-        const typing = gun.get('minecrafteanos_typing');
+        const newsDb = gun.get('minecrafteanos_noticias_v1');
+        const chatDb = gun.get('minecrafteanos_chat_v1');
 
-        // --- AUTENTICACIÓN ---
-        async function auth(type) {
-            const alias = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            if (alias.length < 3 || pass.length < 3) return alert("Muy corto");
+        const ADMIN_USER = "Dylan2408R2";
 
-            if (type === 'register') {
+        // --- AUTH ---
+        function auth(mode) {
+            const alias = document.getElementById('user-alias').value;
+            const pass = document.getElementById('user-pass').value;
+            if(mode === 'register') {
                 user.create(alias, pass, (ack) => {
-                    if (ack.err) alert(ack.err);
-                    else alert("Cuenta creada, ahora dale a Entrar");
+                    if(ack.err) alert(ack.err); else alert("Cuenta creada!");
                 });
             } else {
                 user.auth(alias, pass, (ack) => {
-                    if (ack.err) alert("Error de acceso");
-                    else startApp();
+                    if(ack.err) alert("Error"); else startApp();
                 });
             }
         }
 
         function startApp() {
             document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('app').style.display = 'grid';
-            loadMessages();
-            listenTyping();
+            document.getElementById('user-tag').innerText = "@" + user.is.alias;
+            
+            // Si es Dylan, mostramos el panel de admin
+            if(user.is.alias === ADMIN_USER) {
+                document.getElementById('admin-panel').style.display = 'block';
+            }
+            
+            loadNews();
+            loadChat();
+            document.getElementById('player').play().catch(e => console.log("Auto-play bloqueado"));
         }
 
-        // --- CHAT LOGIC ---
-        function sendText() {
-            const input = document.getElementById('msg-input');
-            if (!input.value.trim()) return;
-            postToGun({ type: 'text', content: input.value });
+        // --- NAVEGACIÓN ---
+        function switchTab(tab) {
+            document.querySelectorAll('.content-area').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('nav span').forEach(s => s.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.getElementById('nav-' + tab).classList.add('active');
+        }
+
+        // --- NOTICIAS ---
+        function postNews() {
+            const title = document.getElementById('news-title').value;
+            const img = document.getElementById('news-img').value;
+            const desc = document.getElementById('news-desc').value;
+
+            if(!title || !img) return alert("Falta título o imagen");
+
+            newsDb.set({ title, img, desc, time: Date.now() });
+            alert("Noticia publicada!");
+            document.getElementById('news-title').value = "";
+            document.getElementById('news-img').value = "";
+            document.getElementById('news-desc').value = "";
+        }
+
+        function loadNews() {
+            const container = document.getElementById('news-container');
+            newsDb.map().once((data, id) => {
+                if(!data) return;
+                const card = document.createElement('div');
+                card.className = 'news-card';
+                card.onclick = () => {
+                    const d = card.querySelector('.desc');
+                    d.style.display = d.style.display === 'block' ? 'none' : 'block';
+                };
+                card.innerHTML = `
+                    <img src="${data.img}" onerror="this.src='https://via.placeholder.com/300x150?text=Minecraft'">
+                    <h3>${data.title}</h3>
+                    <div class="desc">${data.desc}</div>
+                `;
+                container.prepend(card);
+            });
+        }
+
+        // --- CHAT ---
+        function sendChat() {
+            const input = document.getElementById('chat-input');
+            if(!input.value) return;
+            chatDb.set({ msg: input.value, sender: user.is.alias, time: Date.now() });
             input.value = "";
         }
 
-        function sendSticker(url) {
-            postToGun({ type: 'image', content: url });
-        }
-
-        function sendImage(input) {
-            const file = input.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    postToGun({ type: 'image', content: reader.result });
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function postToGun(data) {
-            chat.set({
-                ...data,
-                sender: user.is.alias,
-                time: Date.now()
-            });
-        }
-
-        function loadMessages() {
-            const window = document.getElementById('chat-window');
-            chat.map().once((data, id) => {
-                if (!data) return;
-                const isMe = data.sender === user.is.alias;
+        function loadChat() {
+            const box = document.getElementById('chat-messages');
+            chatDb.map().once((data) => {
+                if(!data) return;
                 const div = document.createElement('div');
-                div.className = `message ${isMe ? 'me' : ''}`;
-                
-                let content = data.type === 'text' 
-                    ? `<span>${data.content}</span>` 
-                    : `<img src="${data.content}">`;
-
-                div.innerHTML = `<span class="user">${data.sender}</span>${content}`;
-                window.appendChild(div);
-                window.scrollTop = window.scrollHeight;
+                div.className = 'msg';
+                div.innerHTML = `<b>${data.sender}:</b><br>${data.msg}`;
+                box.appendChild(div);
+                document.getElementById('tab-chat').scrollTop = box.scrollHeight;
             });
         }
 
-        // --- TYPING INDICATOR ---
-        let typingTimeout;
-        function isTyping() {
-            typing.get(user.is.alias).put(true);
-            clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => {
-                typing.get(user.is.alias).put(false);
-            }, 2000);
-        }
-
-        function listenTyping() {
-            typing.map().on((isTyping, name) => {
-                const indicator = document.getElementById('typing-indicator');
-                if (isTyping && name !== user.is.alias) {
-                    indicator.innerText = `${name} está escribiendo...`;
-                } else {
-                    indicator.innerText = "";
-                }
-            });
-        }
-
-        if (user.is) startApp();
+        if(user.is) startApp();
     </script>
 </body>
 </html>
