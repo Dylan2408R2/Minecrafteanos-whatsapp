@@ -24,18 +24,21 @@
         /* --- PANTALLA LOGIN --- */
         #auth-screen {
             position: fixed; inset: 0; z-index: 1000; background: #000;
-            display: flex; align-items: center; justify-content: center;
+            display: none; align-items: center; justify-content: center;
             background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://wallpaperaccess.com/full/46664.jpg');
             background-size: cover;
         }
         .auth-card { background: var(--mc-panel); padding: 30px; border-radius: 12px; text-align: center; width: 320px; border: 1px solid #333; }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: var(--mc-green); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
         
-        /* --- CABECERA Y NOTIFICACIONES --- */
+        /* --- CABECERA --- */
         header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 2px solid #000; align-items: center; }
-        #notif-btn { background: #444; border: none; color: gold; padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; }
-
+        .user-controls { display: flex; align-items: center; gap: 10px; }
+        
+        /* Estilo Foto de Perfil */
+        .pfp-container { width: 35px; height: 35px; border-radius: 50%; border: 2px solid var(--mc-green); overflow: hidden; cursor: pointer; background: #333; }
+        .pfp-container img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* --- NAVEGACIÓN --- */
         nav { display: flex; gap: 20px; background: #252525; padding: 12px 25px; border-bottom: 1px solid #333; }
         nav span { cursor: pointer; font-weight: bold; color: #888; }
         nav span.active { color: var(--mc-green); border-bottom: 2px solid var(--mc-green); }
@@ -43,20 +46,16 @@
         .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; padding-bottom: 120px; }
         .content-area.active { display: block; }
 
-        /* --- NOTICIAS --- */
-        .admin-only { background: #1b2e1b; padding: 15px; border-radius: 8px; margin-bottom: 25px; display: none; border: 1px solid var(--mc-green); }
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .news-card { background: var(--mc-panel); border-radius: 10px; overflow: hidden; border: 1px solid #333; cursor: pointer; animation: fadeIn 0.5s; }
-        .news-card img { width: 100%; height: 180px; object-fit: cover; }
-        .news-card h3 { padding: 15px; margin: 0; }
-        .news-card .desc { padding: 0 15px 15px; color: #bbb; display: none; white-space: pre-wrap; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
         /* --- CHAT --- */
         #chat-messages { display: flex; flex-direction: column; gap: 10px; }
-        .msg { background: #252525; padding: 10px; border-radius: 8px; max-width: 80%; border-left: 4px solid var(--mc-green); }
-        .msg.me { align-self: flex-end; border-left: 0; border-right: 4px solid var(--mc-accent); background: #1e331e; }
+        .msg { background: #252525; padding: 10px; border-radius: 8px; max-width: 85%; border-left: 4px solid var(--mc-green); line-height: 1.4; display: flex; align-items: flex-start; gap: 10px; }
+        .msg.me { align-self: flex-end; border-left: 0; border-right: 4px solid var(--mc-accent); background: #1e331e; flex-direction: row-reverse; }
+        
+        .msg b { color: var(--mc-accent); margin-right: 4px; }
+        .chat-pfp { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #444; flex-shrink: 0; }
+
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: var(--mc-green); color: white; font-weight: bold; cursor: pointer; }
 
         /* --- FOOTER --- */
         #footer-controls { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; }
@@ -80,9 +79,15 @@
     <header>
         <div>
             <strong>MINECRAFTEANOS</strong>
-            <button id="notif-btn" onclick="requestNotif()">🔔 Activar Notificaciones</button>
         </div>
-        <button onclick="logout()" style="width:auto; padding:5px 10px; background:#aa0000; font-size:10px">SALIR</button>
+        <div class="user-controls">
+            <!-- Foto de perfil clickeable para cambiarla -->
+            <label class="pfp-container" title="Cambiar foto de perfil">
+                <img id="my-pfp" src="https://www.gravatar.com/avatar/0?d=mp">
+                <input type="file" id="pfp-input" hidden accept="image/*" onchange="uploadPFP(this)">
+            </label>
+            <button onclick="logout()" style="width:auto; padding:5px 10px; background:#aa0000; font-size:10px">SALIR</button>
+        </div>
     </header>
 
     <nav>
@@ -91,14 +96,14 @@
     </nav>
 
     <div id="tab-news" class="content-area active">
-        <div id="admin-panel" class="admin-only">
+        <div id="admin-panel" style="display:none; background:#1b2e1b; padding:15px; border-radius:8px; border:1px solid var(--mc-green); margin-bottom:20px;">
             <h4 style="margin:0 0 10px 0">Panel Admin (Dylan)</h4>
             <input type="text" id="news-title" placeholder="Título">
             <input type="file" id="news-file" accept="image/*">
             <textarea id="news-desc" placeholder="Descripción..."></textarea>
             <button onclick="postNews()">PUBLICAR NOTICIA</button>
         </div>
-        <div id="news-container" class="news-grid"></div>
+        <div id="news-container"></div>
     </div>
 
     <div id="tab-chat" class="content-area">
@@ -122,30 +127,35 @@
     <script>
         const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun']);
         const user = gun.user().recall({storage: true});
-        const newsDb = gun.get('minecrafteanos_global_news_v11'); // v11 para empezar limpio
+        const newsDb = gun.get('minecrafteanos_global_news_v11');
         const chatDb = gun.get('minecrafteanos_global_chat_v11');
+        const profilesDb = gun.get('minecrafteanos_profiles_v11');
         
+        const msgSound = new Audio('mensaje.mp3');
         const ADMIN_NAME = "Dylan2408R2";
-        const pageLoadTime = Date.now(); // Marca el momento en que entraste
+        const pageLoadTime = Date.now();
+        let pfpCache = {}; // Para no cargar la imagen mil veces
 
-        // --- NOTIFICACIONES ---
-        function requestNotif() {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
-                    document.getElementById('notif-btn').innerText = "✅ Notificaciones Activas";
-                    new Notification("Minecrafteanos", { body: "¡Ya recibirás avisos de nuevas noticias!", icon: "https://minecraft.wiki/images/Diamond_JE3_BE3.png" });
-                }
-            });
+        gun.on('auth', () => { startApp(); });
+
+        // --- FUNCIONES PERFIL ---
+        function uploadPFP(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const base64 = e.target.result;
+                profilesDb.get(user.is.alias).put({ pfp: base64 });
+                document.getElementById('my-pfp').src = base64;
+                alert("¡Foto de perfil actualizada!");
+            };
         }
 
-        function sendSystemNotification(title) {
-            if (Notification.permission === "granted") {
-                new Notification("Nueva Noticia en Minecrafteanos", {
-                    body: title,
-                    icon: "https://minecraft.wiki/images/Diamond_JE3_BE3.png",
-                    vibrate: [200, 100, 200]
-                });
-            }
+        function loadMyPFP() {
+            profilesDb.get(user.is.alias).once((data) => {
+                if(data && data.pfp) document.getElementById('my-pfp').src = data.pfp;
+            });
         }
 
         // --- AUTH ---
@@ -153,18 +163,18 @@
             const alias = document.getElementById('user-alias').value;
             const pass = document.getElementById('user-pass').value;
             if(mode === 'register') {
-                user.create(alias, pass, (ack) => { if(ack.err) alert(ack.err); else alert("Cuenta creada!"); });
+                user.create(alias, pass, (ack) => { if(ack.err) alert(ack.err); else alert("Creada!"); });
             } else {
                 user.auth(alias, pass, (ack) => { if(ack.err) alert("Error"); else startApp(); });
             }
         }
 
-        function logout() { user.leave(); localStorage.clear(); location.reload(); }
+        function logout() { user.leave(); location.reload(); }
 
         function startApp() {
             document.getElementById('auth-screen').style.display = 'none';
             if(user.is.alias === ADMIN_NAME) document.getElementById('admin-panel').style.display = 'block';
-            if(Notification.permission === "granted") document.getElementById('notif-btn').innerText = "✅ Notificaciones Activas";
+            loadMyPFP();
             loadNews();
             loadChat();
         }
@@ -176,68 +186,74 @@
             document.getElementById('chat-input-container').style.display = (tab === 'chat') ? 'flex' : 'none';
         }
 
-        // --- NOTICIAS ---
-        async function postNews() {
-            const title = document.getElementById('news-title').value;
-            const desc = document.getElementById('news-desc').value;
-            const file = document.getElementById('news-file').files[0];
-            if(!title || !file) return alert("Falta título o imagen");
-            
-            // Procesar imagen
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                newsDb.set({ title, desc, img: e.target.result, time: Date.now() });
-                alert("Noticia publicada!");
-                location.reload();
-            };
-        }
-
-        function loadNews() {
-            const container = document.getElementById('news-container');
-            newsDb.map().once((data) => {
-                if(!data || !data.title) return;
-                
-                // Si la noticia es nueva (publicada después de que cargaste la página) -> NOTIFICAR
-                if(data.time > pageLoadTime) {
-                    sendSystemNotification(data.title);
-                }
-
-                const card = document.createElement('div');
-                card.className = 'news-card';
-                card.onclick = () => {
-                    const d = card.querySelector('.desc');
-                    d.style.display = d.style.display === 'block' ? 'none' : 'block';
-                };
-                card.innerHTML = `<img src="${data.img}"><h3>${data.title}</h3><div class="desc">${data.desc || ''}</div>`;
-                container.prepend(card);
-            });
-        }
-
         // --- CHAT ---
+        function playSound() {
+            msgSound.currentTime = 0;
+            msgSound.play().catch(() => {});
+        }
+
         function sendChat() {
             const input = document.getElementById('chat-input');
             if(!input.value.trim()) return;
-            chatDb.set({ msg: input.value, sender: user.is.alias, type: 'text', time: Date.now() });
+            chatDb.set({ msg: input.value, sender: user.is.alias, time: Date.now() });
             input.value = "";
+            playSound();
         }
 
         function loadChat() {
             const box = document.getElementById('chat-messages');
-            chatDb.map().once((data) => {
+            chatDb.map().once((data, id) => {
                 if(!data || !data.sender) return;
+
                 const isMe = data.sender === user.is.alias;
                 const div = document.createElement('div');
                 div.className = `msg ${isMe ? 'me' : ''}`;
-                const content = data.type === 'image' ? `<img src="${data.msg}" style="width:100%">` : `<span>${data.msg}</span>`;
-                div.innerHTML = `<b>${data.sender}</b>${content}`;
+                div.id = "msg-" + id;
+
+                // Estructura del mensaje: Foto + (Nombre: Mensaje)
+                div.innerHTML = `
+                    <img class="chat-pfp" id="pfp-${id}" src="https://www.gravatar.com/avatar/0?d=mp">
+                    <div>
+                        <b>${data.sender}: </b>
+                        <span>${data.msg}</span>
+                    </div>
+                `;
+                
                 box.appendChild(div);
-                document.getElementById('tab-chat').scrollTop = document.getElementById('tab-chat').scrollHeight;
+                
+                // Cargar la foto del remitente desde la DB de perfiles
+                profilesDb.get(data.sender).once((prof) => {
+                    if(prof && prof.pfp) {
+                        const imgEl = document.getElementById(`pfp-${id}`);
+                        if(imgEl) imgEl.src = prof.pfp;
+                    }
+                });
+
+                if(data.time > pageLoadTime && !isMe) playSound();
+
+                const area = document.getElementById('tab-chat');
+                area.scrollTop = area.scrollHeight;
             });
         }
 
-        if(user.is) startApp();
-        else setTimeout(() => { if(!user.is) document.getElementById('auth-screen').style.display = 'flex'; }, 1000);
+        // --- NOTICIAS ---
+        function loadNews() {
+            const container = document.getElementById('news-container');
+            newsDb.map().once((data) => {
+                if(!data || !data.title) return;
+                const card = document.createElement('div');
+                card.style = "background:var(--mc-panel); margin-bottom:15px; border-radius:8px; overflow:hidden; border:1px solid #333";
+                card.innerHTML = `<img src="${data.img}" style="width:100%; height:150px; object-fit:cover">
+                                  <div style="padding:15px"><h3>${data.title}</h3><p style="color:#bbb">${data.desc || ''}</p></div>`;
+                container.prepend(card);
+            });
+        }
+
+        // Persistencia
+        setTimeout(() => {
+            if(!user.is) document.getElementById('auth-screen').style.display = 'flex';
+            else startApp();
+        }, 800);
     </script>
 </body>
 </html>
