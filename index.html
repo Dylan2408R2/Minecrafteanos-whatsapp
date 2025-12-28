@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minecrafteanos | Oficial</title>
+    <!-- Cargamos Gun.js y sus extensiones de seguridad y almacenamiento local -->
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/lib/radix.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/lib/radisk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/lib/store.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/lib/rql.js"></script>
     <style>
         :root {
             --mc-green: #388E3C;
@@ -21,211 +26,206 @@
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
-        /* --- LOGIN --- */
+        /* --- LOGIN (Oculto por defecto para evitar parpadeo) --- */
         #auth-screen {
             position: fixed; inset: 0; z-index: 1000; background: #000;
-            display: flex; align-items: center; justify-content: center;
+            display: none; align-items: center; justify-content: center;
             background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://wallpaperaccess.com/full/46664.jpg');
             background-size: cover;
         }
-        .auth-card { background: var(--mc-panel); padding: 30px; border-radius: 12px; text-align: center; width: 320px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; font-family: inherit; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: var(--mc-green); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: inherit; }
-        button:hover { filter: brightness(1.2); transform: scale(1.02); }
+        .auth-card { background: var(--mc-panel); padding: 30px; border-radius: 12px; text-align: center; width: 320px; border: 1px solid #333; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: var(--mc-green); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { filter: brightness(1.2); }
 
-        /* --- INTERFAZ PRINCIPAL --- */
+        /* --- UI PRINCIPAL --- */
         header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 2px solid #000; align-items: center; }
         nav { display: flex; gap: 20px; background: #252525; padding: 12px 25px; border-bottom: 1px solid #333; }
-        nav span { cursor: pointer; font-weight: bold; color: #888; padding-bottom: 5px; transition: 0.3s; }
+        nav span { cursor: pointer; font-weight: bold; color: #888; padding-bottom: 5px; }
         nav span.active { color: var(--mc-green); border-bottom: 2px solid var(--mc-green); }
 
         .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; padding-bottom: 120px; }
         .content-area.active { display: block; }
 
-        /* --- SECCIÓN NOTICIAS --- */
-        .admin-only { background: #1b2e1b; padding: 15px; border-radius: 8px; margin-bottom: 25px; display: none; border: 1px solid var(--mc-green); animation: slideDown 0.4s; }
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
-        .news-card { background: var(--mc-panel); border-radius: 12px; overflow: hidden; border: 1px solid #333; cursor: pointer; transition: 0.3s; animation: fadeIn 0.6s; }
-        .news-card:hover { transform: translateY(-8px); border-color: var(--mc-green); box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
-        .news-card img { width: 100%; height: 180px; object-fit: cover; background: #000; border-bottom: 1px solid #333; }
-        .news-card h3 { padding: 15px; margin: 0; font-size: 1.2rem; color: var(--mc-accent); }
-        .news-card .desc { padding: 0 15px 15px; color: #ccc; font-size: 0.95rem; display: none; white-space: pre-wrap; line-height: 1.4; }
+        /* --- NOTICIAS --- */
+        .admin-only { background: #1b2e1b; padding: 15px; border-radius: 8px; margin-bottom: 25px; display: none; border: 1px solid var(--mc-green); }
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .news-card { background: var(--mc-panel); border-radius: 10px; overflow: hidden; border: 1px solid #333; cursor: pointer; }
+        .news-card img { width: 100%; height: 180px; object-fit: cover; }
+        .news-card h3 { padding: 15px; margin: 0; }
+        .news-card .desc { padding: 0 15px 15px; color: #bbb; display: none; white-space: pre-wrap; }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        /* --- SECCIÓN CHAT --- */
-        #chat-messages { display: flex; flex-direction: column; gap: 12px; }
-        .msg { background: #2a2a2a; padding: 12px; border-radius: 10px; max-width: 80%; border-left: 4px solid var(--mc-green); align-self: flex-start; }
+        /* --- CHAT --- */
+        #chat-messages { display: flex; flex-direction: column; gap: 10px; }
+        .msg { background: #252525; padding: 10px; border-radius: 8px; max-width: 80%; border-left: 4px solid var(--mc-green); align-self: flex-start; }
         .msg.me { align-self: flex-end; border-left: 0; border-right: 4px solid var(--mc-accent); background: #1e331e; }
-        .msg b { color: var(--mc-accent); font-size: 0.75rem; display: block; margin-bottom: 4px; text-transform: uppercase; }
-        .msg img { max-width: 100%; border-radius: 6px; margin-top: 8px; border: 1px solid #444; }
+        .msg b { color: var(--mc-accent); font-size: 11px; display: block; }
+        .msg img { max-width: 100%; border-radius: 5px; margin-top: 5px; }
 
-        /* --- REPRODUCTOR Y ENTRADA --- */
-        #music-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #000; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #333; height: 55px; z-index: 10; }
-        audio { height: 32px; filter: invert(1); width: 220px; opacity: 0.8; }
-
-        .input-chat-fixed { position: fixed; bottom: 55px; left: 0; right: 0; padding: 12px 20px; background: var(--mc-panel); display: flex; gap: 12px; border-top: 1px solid #444; z-index: 9; }
-        .file-label { background: #333; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 20px; border: 1px solid #444; transition: 0.2s; }
-        .file-label:hover { background: #444; }
+        /* --- FOOTER FIXED --- */
+        #footer-controls { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; }
+        .input-chat-fixed { padding: 12px; background: var(--mc-panel); display: flex; gap: 10px; border-top: 1px solid #444; }
+        #music-bar { background: #000; padding: 5px 20px; display: flex; align-items: center; justify-content: space-between; height: 45px; }
+        audio { height: 25px; filter: invert(1); width: 180px; }
     </style>
 </head>
 <body>
 
-    <!-- PANTALLA DE INICIO DE SESIÓN -->
+    <!-- PANTALLA LOGIN -->
     <div id="auth-screen">
         <div class="auth-card">
-            <h1 style="color:var(--mc-green); margin-top:0; letter-spacing: 1px;">MINECRAFTEANOS</h1>
-            <input type="text" id="user-alias" placeholder="Nombre de Usuario">
+            <h1 style="color:var(--mc-green); margin:0 0 20px 0;">MINECRAFTEANOS</h1>
+            <input type="text" id="user-alias" placeholder="Usuario">
             <input type="password" id="user-pass" placeholder="Contraseña">
-            <button onclick="auth('login')">ENTRAR AL SERVER</button>
-            <button onclick="auth('register')" style="background:#333; margin-top:12px; font-size:12px; color: #bbb;">CREAR CUENTA NUEVA</button>
+            <button onclick="auth('login')">ENTRAR</button>
+            <button onclick="auth('register')" style="background:#333; margin-top:10px; font-size:12px">CREAR CUENTA</button>
         </div>
     </div>
 
-    <!-- CABECERA -->
+    <!-- APP PRINCIPAL -->
     <header>
-        <strong style="letter-spacing: 1px;">MINECRAFTEANOS <span id="user-tag" style="color:var(--mc-accent); font-size:11px; margin-left: 10px;"></span></strong>
-        <button onclick="logout()" style="width:auto; padding:6px 15px; background:#aa0000; font-size:11px; border-radius: 4px;">CERRAR SESIÓN</button>
+        <strong>MINECRAFTEANOS <span id="user-tag" style="color:var(--mc-accent); font-size:11px"></span></strong>
+        <button onclick="logout()" style="width:auto; padding:5px 10px; background:#aa0000; font-size:10px">CERRAR SESIÓN</button>
     </header>
 
-    <!-- NAVEGACIÓN -->
     <nav>
         <span id="nav-news" class="active" onclick="switchTab('news')">NOTICIAS</span>
-        <span id="nav-chat" onclick="switchTab('chat')">CHAT GLOBAL</span>
+        <span id="nav-chat" onclick="switchTab('chat')">CHAT</span>
     </nav>
 
-    <!-- CONTENIDO: NOTICIAS -->
     <div id="tab-news" class="content-area active">
-        <!-- Panel para el administrador Dylan2408R2 -->
         <div id="admin-panel" class="admin-only">
-            <h4 style="margin:0 0 12px 0; color: var(--mc-accent)">Panel de Administración (Dylan)</h4>
-            <input type="text" id="news-title" placeholder="Título de la Noticia">
-            <div style="margin: 10px 0;">
-                <label style="font-size:13px; color:#aaa; display:block; margin-bottom:5px;">Imagen de portada:</label>
-                <input type="file" id="news-file" accept="image/*" style="font-size: 12px; background: transparent; border: none; padding: 0;">
-            </div>
-            <textarea id="news-desc" rows="4" placeholder="Escribe aquí los detalles de la noticia..."></textarea>
-            <button onclick="postNews()">PUBLICAR EN EL MURO</button>
+            <h4 style="margin:0 0 10px 0">Panel Admin (Dylan)</h4>
+            <input type="text" id="news-title" placeholder="Título">
+            <input type="file" id="news-file" accept="image/*">
+            <textarea id="news-desc" placeholder="Descripción..."></textarea>
+            <button onclick="postNews()">PUBLICAR</button>
         </div>
-        <div id="news-container" class="news-grid">
-            <!-- Aquí se cargan las noticias dinámicamente -->
-        </div>
+        <div id="news-container" class="news-grid"></div>
     </div>
 
-    <!-- CONTENIDO: CHAT -->
     <div id="tab-chat" class="content-area">
         <div id="chat-messages"></div>
-        <div class="input-chat-fixed">
-            <label class="file-label" title="Enviar Imagen">
-                📷 <input type="file" id="chat-file" accept="image/*" hidden onchange="sendChatImage(this)">
-            </label>
-            <input type="text" id="chat-input" placeholder="Escribe un mensaje en el grupo..." onkeypress="if(event.key==='Enter') sendChat()">
-            <button onclick="sendChat()" style="width:90px">ENVIAR</button>
-        </div>
     </div>
 
-    <!-- REPRODUCTOR DE MÚSICA -->
-    <div id="music-bar">
-        <span style="font-size:11px; color:#888; font-weight: bold;">♫ MINECRAFT OST</span>
-        <audio id="player" controls loop>
-            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-        </audio>
+    <div id="footer-controls">
+        <div id="chat-input-container" class="input-chat-fixed" style="display:none">
+            <label style="background:#444; padding:8px; border-radius:5px; cursor:pointer">
+                📷 <input type="file" id="chat-file" accept="image/*" hidden onchange="sendChatImage(this)">
+            </label>
+            <input type="text" id="chat-input" placeholder="Mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
+            <button onclick="sendChat()" style="width:80px">ENVIAR</button>
+        </div>
+        <div id="music-bar">
+            <span style="font-size:10px; color:#888">♫ MINECRAFT RADIO</span>
+            <audio id="player" controls loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+        </div>
     </div>
 
     <script>
-        // Inicialización de la base de datos descentralizada Gun.js
-        const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun']);
+        // CONFIGURACIÓN PERSISTENTE
+        // Los nombres de los nodos (minecrafteanos_global_...) NO deben cambiar para no perder datos
+        const gun = Gun({
+            peers: ['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun'],
+            localStorage: true 
+        });
+        
+        // .recall({storage: true}) hace que la sesión se guarde en el navegador
         const user = gun.user().recall({storage: true});
-        const newsDb = gun.get('minecrafteanos_news_final_v1');
-        const chatDb = gun.get('minecrafteanos_chat_final_v1');
+        const newsDb = gun.get('minecrafteanos_global_news_v10');
+        const chatDb = gun.get('minecrafteanos_global_chat_v10');
 
         const ADMIN_NAME = "Dylan2408R2";
 
-        // --- SISTEMA DE AUTENTICACIÓN ---
+        // --- COMPROBAR SESIÓN AL CARGAR ---
+        function checkSession() {
+            if (user.is) {
+                // Si el usuario ya está logueado en este navegador, entrar directo
+                startApp();
+            } else {
+                // Si no, mostrar pantalla de login
+                document.getElementById('auth-screen').style.display = 'flex';
+            }
+        }
+
+        // --- AUTH ---
         function auth(mode) {
             const alias = document.getElementById('user-alias').value;
             const pass = document.getElementById('user-pass').value;
-            if(!alias || !pass) return alert("Por favor, completa todos los campos.");
+            if(!alias || !pass) return alert("Completa los datos");
             
             if(mode === 'register') {
-                user.create(alias, pass, (ack) => { 
-                    if(ack.err) alert("Error: " + ack.err); 
-                    else alert("¡Cuenta de Minecrafteano creada! Ahora puedes iniciar sesión."); 
+                user.create(alias, pass, (ack) => {
+                    if(ack.err) alert(ack.err); else alert("¡Cuenta creada! Dale a Entrar.");
                 });
             } else {
-                user.auth(alias, pass, (ack) => { 
-                    if(ack.err) alert("Usuario o contraseña incorrectos."); 
-                    else startApp(); 
+                user.auth(alias, pass, (ack) => {
+                    if(ack.err) alert("Error de acceso"); else startApp();
                 });
             }
         }
 
-        function logout() { user.leave(); location.reload(); }
+        function logout() {
+            user.leave();
+            localStorage.clear(); // Limpia la sesión guardada
+            location.reload();
+        }
 
         function startApp() {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('user-tag').innerText = `[${user.is.alias}]`;
             
-            // Verificación de administrador
-            if(user.is.alias === ADMIN_NAME) {
-                document.getElementById('admin-panel').style.display = 'block';
-            }
+            if(user.is.alias === ADMIN_NAME) document.getElementById('admin-panel').style.display = 'block';
             
             loadNews();
             loadChat();
             
-            // Intentar reproducir música (algunos navegadores requieren interacción previa)
-            const p = document.getElementById('player');
-            p.volume = 0.4;
-            p.play().catch(() => console.log("Música en espera de interacción."));
+            // Mostrar input de chat solo si está en la pestaña chat
+            switchTab('news');
         }
 
         function switchTab(tab) {
             document.querySelectorAll('.content-area, nav span').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-'+tab).classList.add('active');
             document.getElementById('nav-'+tab).classList.add('active');
+            document.getElementById('chat-input-container').style.display = (tab === 'chat') ? 'flex' : 'none';
         }
 
-        // --- PROCESAMIENTO DE IMÁGENES (REDIMENSIÓN) ---
+        // --- IMÁGENES ---
         async function processFile(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = (event) => {
+                reader.onload = (e) => {
                     const img = new Image();
-                    img.src = event.target.result;
+                    img.src = e.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800;
-                        const scaleSize = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleSize;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7)); 
+                        const scale = 800 / img.width;
+                        canvas.width = 800;
+                        canvas.height = img.height * scale;
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
                     };
                 };
             });
         }
 
-        // --- LÓGICA DE NOTICIAS ---
+        // --- NOTICIAS ---
         async function postNews() {
             const title = document.getElementById('news-title').value;
             const desc = document.getElementById('news-desc').value;
-            const fileInput = document.getElementById('news-file');
-            
-            if(!title || !fileInput.files[0]) return alert("La noticia debe tener al menos un título y una imagen.");
-
-            const imgBase64 = await processFile(fileInput.files[0]);
-            newsDb.set({ title, desc, img: imgBase64, author: user.is.alias, time: Date.now() });
-            
-            alert("¡Noticia publicada en Minecrafteanos!");
+            const file = document.getElementById('news-file').files[0];
+            if(!title || !file) return alert("Falta título o imagen");
+            const img = await processFile(file);
+            newsDb.set({ title, desc, img, time: Date.now() });
+            alert("Publicado!");
             location.reload();
         }
 
         function loadNews() {
             const container = document.getElementById('news-container');
+            container.innerHTML = "";
             newsDb.map().once((data) => {
                 if(!data || !data.title) return;
                 const card = document.createElement('div');
@@ -234,16 +234,12 @@
                     const d = card.querySelector('.desc');
                     d.style.display = d.style.display === 'block' ? 'none' : 'block';
                 };
-                card.innerHTML = `
-                    <img src="${data.img}">
-                    <h3>${data.title}</h3>
-                    <div class="desc">${data.desc || 'Sin descripción adicional.'}</div>
-                `;
+                card.innerHTML = `<img src="${data.img}"><h3>${data.title}</h3><div class="desc">${data.desc || ''}</div>`;
                 container.prepend(card);
             });
         }
 
-        // --- LÓGICA DEL CHAT ---
+        // --- CHAT ---
         function sendChat() {
             const input = document.getElementById('chat-input');
             if(!input.value.trim()) return;
@@ -253,8 +249,8 @@
 
         async function sendChatImage(input) {
             if(!input.files[0]) return;
-            const imgBase64 = await processFile(input.files[0]);
-            chatDb.set({ msg: imgBase64, sender: user.is.alias, type: 'image', time: Date.now() });
+            const img = await processFile(input.files[0]);
+            chatDb.set({ msg: img, sender: user.is.alias, type: 'image', time: Date.now() });
         }
 
         function loadChat() {
@@ -264,17 +260,15 @@
                 const isMe = data.sender === user.is.alias;
                 const div = document.createElement('div');
                 div.className = `msg ${isMe ? 'me' : ''}`;
-                let content = data.type === 'image' ? `<img src="${data.msg}">` : `<span>${data.msg}</span>`;
+                const content = data.type === 'image' ? `<img src="${data.msg}">` : `<span>${data.msg}</span>`;
                 div.innerHTML = `<b>${data.sender}</b>${content}`;
                 box.appendChild(div);
-                // Scroll automático al último mensaje
-                const tab = document.getElementById('tab-chat');
-                tab.scrollTop = tab.scrollHeight;
+                document.getElementById('tab-chat').scrollTop = document.getElementById('tab-chat').scrollHeight;
             });
         }
 
-        // Re-logueo automático
-        if(user.is) startApp();
+        // INICIAR LÓGICA
+        checkSession();
     </script>
 </body>
 </html>
