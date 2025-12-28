@@ -21,7 +21,14 @@
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
-        /* --- PANTALLA LOGIN (Oculta al inicio) --- */
+        /* --- PANTALLA CARGANDO --- */
+        #loading-screen {
+            position: fixed; inset: 0; z-index: 2000; background: #000;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column;
+        }
+
+        /* --- PANTALLA LOGIN --- */
         #auth-screen {
             position: fixed; inset: 0; z-index: 1000; background: #000;
             display: none; align-items: center; justify-content: center;
@@ -37,31 +44,25 @@
         .pfp-container img { width: 100%; height: 100%; object-fit: cover; }
         
         nav { display: flex; gap: 20px; background: #252525; padding: 12px 25px; border-bottom: 1px solid #333; }
-        nav span { cursor: pointer; font-weight: bold; color: #888; letter-spacing: 0.5px; }
+        nav span { cursor: pointer; font-weight: bold; color: #888; }
         nav span.active { color: var(--mc-green); border-bottom: 2px solid var(--mc-green); }
 
         .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; padding-bottom: 120px; }
         .content-area.active { display: block; }
 
-        /* --- NOTICIAS (Soporte 1416 x 672) --- */
+        /* --- NOTICIAS --- */
         .news-card { background: var(--mc-panel); margin-bottom: 25px; border-radius: 10px; overflow: hidden; border: 1px solid #333; max-width: 850px; margin: 0 auto 25px auto; }
-        .news-card img { width: 100%; aspect-ratio: 1416 / 672; object-fit: cover; display: block; background: #000; }
+        .news-card img { width: 100%; aspect-ratio: 1416 / 672; object-fit: cover; display: block; }
         .news-card-content { padding: 20px; }
-        .news-card h3 { margin: 0 0 10px 0; color: var(--mc-accent); }
 
-        /* --- CHAT (Letras no juntas) --- */
+        /* --- CHAT (Letras con espacio) --- */
         #chat-messages { display: flex; flex-direction: column; gap: 12px; }
-        .msg { background: #252525; padding: 12px; border-radius: 8px; max-width: 80%; border-left: 4px solid var(--mc-green); display: flex; align-items: flex-start; gap: 12px; }
+        .msg { background: #252525; padding: 12px; border-radius: 8px; max-width: 80%; border-left: 4px solid var(--mc-green); display: flex; gap: 12px; }
         .msg.me { align-self: flex-end; border-left: 0; border-right: 4px solid var(--mc-accent); background: #1e331e; flex-direction: row-reverse; }
-        
-        /* Separación de nombre y mensaje */
-        .msg b { color: var(--mc-accent); white-space: nowrap; margin-right: 5px; }
-        .msg span { word-break: break-word; line-height: 1.5; }
-        .chat-pfp { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #444; flex-shrink: 0; }
+        .msg b { color: var(--mc-accent); margin-right: 5px; } /* Espacio entre nombre y dos puntos */
 
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: var(--mc-green); color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:hover { filter: brightness(1.2); }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: var(--mc-green); color: white; font-weight: bold; cursor: pointer; }
 
         /* --- FOOTER --- */
         #footer-controls { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; }
@@ -69,6 +70,12 @@
     </style>
 </head>
 <body>
+
+    <!-- Pantalla de carga inicial -->
+    <div id="loading-screen">
+        <h2 style="color:var(--mc-green)">MINECRAFTEANOS</h2>
+        <p>Cargando sesión...</p>
+    </div>
 
     <div id="auth-screen">
         <div class="auth-card">
@@ -83,7 +90,7 @@
     <header>
         <div><strong>MINECRAFTEANOS</strong></div>
         <div class="user-controls">
-            <label class="pfp-container" title="Cambiar foto de perfil">
+            <label class="pfp-container">
                 <img id="my-pfp" src="https://www.gravatar.com/avatar/0?d=mp">
                 <input type="file" id="pfp-input" hidden accept="image/*" onchange="uploadPFP(this)">
             </label>
@@ -113,88 +120,92 @@
 
     <div id="footer-controls">
         <div id="chat-input-container" class="input-chat-fixed" style="display:none">
-            <input type="text" id="chat-input" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
+            <input type="text" id="chat-input" placeholder="Mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
             <button onclick="sendChat()" style="width:80px">ENVIAR</button>
         </div>
     </div>
 
     <script>
-        // Configuración de Gun.js
-        const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun']);
+        // Peers actualizados y más estables
+        const gun = Gun({
+            peers: [
+                'https://gun-manhattan.herokuapp.com/gun',
+                'https://peer.wall.org/gun',
+                'https://gundb-relay-ml9v.onrender.com/gun'
+            ],
+            localStorage: true
+        });
+
         const user = gun.user().recall({storage: true});
-        const newsDb = gun.get('minecrafteanos_news_v15');
-        const chatDb = gun.get('minecrafteanos_chat_v15');
-        const profilesDb = gun.get('minecrafteanos_profiles_v15');
+        const newsDb = gun.get('mc_news_v20');
+        const chatDb = gun.get('mc_chat_v20');
+        const profilesDb = gun.get('mc_profiles_v20');
         
         const msgSound = new Audio('mensaje.mp3');
         const ADMIN_NAME = "Dylan2408R2";
         const pageLoadTime = Date.now();
-        let isAppStarted = false;
+        let appIniciada = false;
 
-        // --- SISTEMA DE PERSISTENCIA ---
+        // --- DETECTOR DE AUTENTICACIÓN ---
         gun.on('auth', () => {
-            if (!isAppStarted) startApp();
+            console.log("Sesión recuperada con éxito");
+            localStorage.setItem('mc_sesion_activa', 'true');
+            startApp();
         });
 
         function startApp() {
-            isAppStarted = true;
+            if (appIniciada) return;
+            appIniciada = true;
+            
+            document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'none';
+            
             if(user.is && user.is.alias === ADMIN_NAME) {
                 document.getElementById('admin-panel').style.display = 'block';
             }
-            // Cargar mi foto de perfil
+
             profilesDb.get(user.is.alias).once(d => { 
                 if(d && d.pfp) document.getElementById('my-pfp').src = d.pfp; 
             });
+
             loadNews();
             loadChat();
         }
 
-        // --- AUTH ---
+        // --- LOGIN / REGISTER ---
         function auth(mode) {
             const alias = document.getElementById('user-alias').value;
             const pass = document.getElementById('user-pass').value;
-            if(!alias || !pass) return alert("Completa los campos");
+            if(!alias || !pass) return alert("Faltan datos");
+
             if(mode === 'register') {
-                user.create(alias, pass, (ack) => { 
-                    if(ack.err) alert(ack.err); 
-                    else alert("Cuenta creada, ahora pulsa ENTRAR"); 
+                user.create(alias, pass, (ack) => {
+                    if(ack.err) alert(ack.err);
+                    else alert("Cuenta creada. Ahora dale a ENTRAR");
                 });
             } else {
-                user.auth(alias, pass, (ack) => { 
-                    if(ack.err) alert("Usuario o contraseña incorrectos"); 
-                    else startApp(); 
+                user.auth(alias, pass, (ack) => {
+                    if(ack.err) alert("Error: " + ack.err);
+                    else {
+                        localStorage.setItem('mc_sesion_activa', 'true');
+                        startApp();
+                    }
                 });
             }
         }
 
         function logout() {
+            localStorage.removeItem('mc_sesion_activa');
             user.leave();
-            // Limpiar datos de sesión del navegador para que no haya conflictos
-            localStorage.clear(); 
             location.reload();
         }
 
-        // --- PERFIL ---
-        function uploadPFP(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                const imgData = e.target.result;
-                profilesDb.get(user.is.alias).put({ pfp: imgData });
-                document.getElementById('my-pfp').src = imgData;
-            };
-        }
-
-        // --- CHAT ---
+        // --- CHAT (ESPACIO CORREGIDO) ---
         function sendChat() {
             const input = document.getElementById('chat-input');
             if(!input.value.trim()) return;
             chatDb.set({ msg: input.value, sender: user.is.alias, time: Date.now() });
             input.value = "";
-            // Sonido al enviar nosotros también
             msgSound.currentTime = 0;
             msgSound.play().catch(()=>{});
         }
@@ -209,7 +220,7 @@
                 div.className = `msg ${isMe ? 'me' : ''}`;
                 div.id = 'msg-' + id;
                 
-                // Formato Juan: Hola (con espacio y dos puntos)
+                // Formato exacto: "Nombre: Mensaje"
                 div.innerHTML = `
                     <img class="chat-pfp" id="pfp-${id}" src="https://www.gravatar.com/avatar/0?d=mp">
                     <div>
@@ -219,7 +230,6 @@
                 `;
                 box.appendChild(div);
 
-                // Cargar foto del remitente
                 profilesDb.get(data.sender).once((prof) => {
                     if(prof && prof.pfp) {
                         const img = document.getElementById(`pfp-${id}`);
@@ -227,32 +237,15 @@
                     }
                 });
 
-                // Sonido si es mensaje nuevo de otro
                 if(data.time > pageLoadTime && !isMe) {
                     msgSound.currentTime = 0;
                     msgSound.play().catch(()=>{});
                 }
-                const area = document.getElementById('tab-chat');
-                area.scrollTop = area.scrollHeight;
+                document.getElementById('tab-chat').scrollTop = document.getElementById('tab-chat').scrollHeight;
             });
         }
 
         // --- NOTICIAS ---
-        function postNews() {
-            const title = document.getElementById('news-title').value;
-            const desc = document.getElementById('news-desc').value;
-            const file = document.getElementById('news-file').files[0];
-            if(!title || !file) return alert("Falta título o imagen");
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                newsDb.set({ title, desc, img: e.target.result, time: Date.now() });
-                alert("Noticia publicada!");
-                document.getElementById('news-title').value = "";
-                document.getElementById('news-desc').value = "";
-            };
-        }
-
         function loadNews() {
             const container = document.getElementById('news-container');
             newsDb.map().once((data, id) => {
@@ -260,15 +253,33 @@
                 const card = document.createElement('div');
                 card.id = 'news-' + id;
                 card.className = 'news-card';
-                card.innerHTML = `
-                    <img src="${data.img}">
-                    <div class="news-card-content">
-                        <h3>${data.title}</h3>
-                        <p style="white-space: pre-wrap; color: #ccc;">${data.desc || ''}</p>
-                    </div>
-                `;
+                card.innerHTML = `<img src="${data.img}"><div class="news-card-content"><h3>${data.title}</h3><p>${data.desc || ''}</p></div>`;
                 container.prepend(card);
             });
+        }
+
+        function postNews() {
+            const title = document.getElementById('news-title').value;
+            const desc = document.getElementById('news-desc').value;
+            const file = document.getElementById('news-file').files[0];
+            if(!title || !file) return alert("Faltan datos");
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                newsDb.set({ title, desc, img: e.target.result, time: Date.now() });
+                alert("Publicado!");
+            };
+        }
+
+        function uploadPFP(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                profilesDb.get(user.is.alias).put({ pfp: e.target.result });
+                document.getElementById('my-pfp').src = e.target.result;
+            };
         }
 
         function switchTab(tab) {
@@ -278,13 +289,21 @@
             document.getElementById('chat-input-container').style.display = (tab === 'chat') ? 'flex' : 'none';
         }
 
-        // --- CONTROL DE INICIO ---
-        // Si en 1.5 segundos no se ha detectado sesión automática, mostrar login
-        setTimeout(() => {
-            if (!isAppStarted && !user.is) {
-                document.getElementById('auth-screen').style.display = 'flex';
-            }
-        }, 1500);
+        // --- LÓGICA DE ARRANQUE CRÍTICA ---
+        window.onload = () => {
+            const sesionPrevia = localStorage.getItem('mc_sesion_activa');
+            
+            // Si el usuario ya se logueó antes, le damos 4 segundos para que Gun recupere la sesión
+            // Si no hay sesión previa, vamos directo al login tras 1.5 segundos
+            const tiempoEspera = sesionPrevia ? 4000 : 1500;
+
+            setTimeout(() => {
+                if (!appIniciada) {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    document.getElementById('auth-screen').style.display = 'flex';
+                }
+            }, tiempoEspera);
+        };
     </script>
 </body>
 </html>
