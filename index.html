@@ -4,13 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minecrafteanos | Oficial</title>
-    <!-- Cargamos Gun.js y sus extensiones de seguridad y almacenamiento local -->
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gun/lib/radix.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gun/lib/radisk.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gun/lib/store.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gun/lib/rql.js"></script>
     <style>
         :root {
             --mc-green: #388E3C;
@@ -26,22 +21,23 @@
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
-        /* --- LOGIN (Oculto por defecto para evitar parpadeo) --- */
+        /* --- PANTALLA LOGIN --- */
         #auth-screen {
             position: fixed; inset: 0; z-index: 1000; background: #000;
-            display: none; align-items: center; justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://wallpaperaccess.com/full/46664.jpg');
             background-size: cover;
         }
         .auth-card { background: var(--mc-panel); padding: 30px; border-radius: 12px; text-align: center; width: 320px; border: 1px solid #333; }
         input, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; }
         button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: var(--mc-green); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { filter: brightness(1.2); }
-
-        /* --- UI PRINCIPAL --- */
+        
+        /* --- CABECERA Y NOTIFICACIONES --- */
         header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 2px solid #000; align-items: center; }
+        #notif-btn { background: #444; border: none; color: gold; padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+
         nav { display: flex; gap: 20px; background: #252525; padding: 12px 25px; border-bottom: 1px solid #333; }
-        nav span { cursor: pointer; font-weight: bold; color: #888; padding-bottom: 5px; }
+        nav span { cursor: pointer; font-weight: bold; color: #888; }
         nav span.active { color: var(--mc-green); border-bottom: 2px solid var(--mc-green); }
 
         .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; padding-bottom: 120px; }
@@ -49,20 +45,20 @@
 
         /* --- NOTICIAS --- */
         .admin-only { background: #1b2e1b; padding: 15px; border-radius: 8px; margin-bottom: 25px; display: none; border: 1px solid var(--mc-green); }
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .news-card { background: var(--mc-panel); border-radius: 10px; overflow: hidden; border: 1px solid #333; cursor: pointer; }
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .news-card { background: var(--mc-panel); border-radius: 10px; overflow: hidden; border: 1px solid #333; cursor: pointer; animation: fadeIn 0.5s; }
         .news-card img { width: 100%; height: 180px; object-fit: cover; }
         .news-card h3 { padding: 15px; margin: 0; }
         .news-card .desc { padding: 0 15px 15px; color: #bbb; display: none; white-space: pre-wrap; }
 
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
         /* --- CHAT --- */
         #chat-messages { display: flex; flex-direction: column; gap: 10px; }
-        .msg { background: #252525; padding: 10px; border-radius: 8px; max-width: 80%; border-left: 4px solid var(--mc-green); align-self: flex-start; }
+        .msg { background: #252525; padding: 10px; border-radius: 8px; max-width: 80%; border-left: 4px solid var(--mc-green); }
         .msg.me { align-self: flex-end; border-left: 0; border-right: 4px solid var(--mc-accent); background: #1e331e; }
-        .msg b { color: var(--mc-accent); font-size: 11px; display: block; }
-        .msg img { max-width: 100%; border-radius: 5px; margin-top: 5px; }
 
-        /* --- FOOTER FIXED --- */
+        /* --- FOOTER --- */
         #footer-controls { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; }
         .input-chat-fixed { padding: 12px; background: var(--mc-panel); display: flex; gap: 10px; border-top: 1px solid #444; }
         #music-bar { background: #000; padding: 5px 20px; display: flex; align-items: center; justify-content: space-between; height: 45px; }
@@ -71,7 +67,6 @@
 </head>
 <body>
 
-    <!-- PANTALLA LOGIN -->
     <div id="auth-screen">
         <div class="auth-card">
             <h1 style="color:var(--mc-green); margin:0 0 20px 0;">MINECRAFTEANOS</h1>
@@ -82,10 +77,12 @@
         </div>
     </div>
 
-    <!-- APP PRINCIPAL -->
     <header>
-        <strong>MINECRAFTEANOS <span id="user-tag" style="color:var(--mc-accent); font-size:11px"></span></strong>
-        <button onclick="logout()" style="width:auto; padding:5px 10px; background:#aa0000; font-size:10px">CERRAR SESIÓN</button>
+        <div>
+            <strong>MINECRAFTEANOS</strong>
+            <button id="notif-btn" onclick="requestNotif()">🔔 Activar Notificaciones</button>
+        </div>
+        <button onclick="logout()" style="width:auto; padding:5px 10px; background:#aa0000; font-size:10px">SALIR</button>
     </header>
 
     <nav>
@@ -99,7 +96,7 @@
             <input type="text" id="news-title" placeholder="Título">
             <input type="file" id="news-file" accept="image/*">
             <textarea id="news-desc" placeholder="Descripción..."></textarea>
-            <button onclick="postNews()">PUBLICAR</button>
+            <button onclick="postNews()">PUBLICAR NOTICIA</button>
         </div>
         <div id="news-container" class="news-grid"></div>
     </div>
@@ -123,28 +120,31 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN PERSISTENTE
-        // Los nombres de los nodos (minecrafteanos_global_...) NO deben cambiar para no perder datos
-        const gun = Gun({
-            peers: ['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun'],
-            localStorage: true 
-        });
-        
-        // .recall({storage: true}) hace que la sesión se guarde en el navegador
+        const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun']);
         const user = gun.user().recall({storage: true});
-        const newsDb = gun.get('minecrafteanos_global_news_v10');
-        const chatDb = gun.get('minecrafteanos_global_chat_v10');
-
+        const newsDb = gun.get('minecrafteanos_global_news_v11'); // v11 para empezar limpio
+        const chatDb = gun.get('minecrafteanos_global_chat_v11');
+        
         const ADMIN_NAME = "Dylan2408R2";
+        const pageLoadTime = Date.now(); // Marca el momento en que entraste
 
-        // --- COMPROBAR SESIÓN AL CARGAR ---
-        function checkSession() {
-            if (user.is) {
-                // Si el usuario ya está logueado en este navegador, entrar directo
-                startApp();
-            } else {
-                // Si no, mostrar pantalla de login
-                document.getElementById('auth-screen').style.display = 'flex';
+        // --- NOTIFICACIONES ---
+        function requestNotif() {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    document.getElementById('notif-btn').innerText = "✅ Notificaciones Activas";
+                    new Notification("Minecrafteanos", { body: "¡Ya recibirás avisos de nuevas noticias!", icon: "https://minecraft.wiki/images/Diamond_JE3_BE3.png" });
+                }
+            });
+        }
+
+        function sendSystemNotification(title) {
+            if (Notification.permission === "granted") {
+                new Notification("Nueva Noticia en Minecrafteanos", {
+                    body: title,
+                    icon: "https://minecraft.wiki/images/Diamond_JE3_BE3.png",
+                    vibrate: [200, 100, 200]
+                });
             }
         }
 
@@ -152,36 +152,21 @@
         function auth(mode) {
             const alias = document.getElementById('user-alias').value;
             const pass = document.getElementById('user-pass').value;
-            if(!alias || !pass) return alert("Completa los datos");
-            
             if(mode === 'register') {
-                user.create(alias, pass, (ack) => {
-                    if(ack.err) alert(ack.err); else alert("¡Cuenta creada! Dale a Entrar.");
-                });
+                user.create(alias, pass, (ack) => { if(ack.err) alert(ack.err); else alert("Cuenta creada!"); });
             } else {
-                user.auth(alias, pass, (ack) => {
-                    if(ack.err) alert("Error de acceso"); else startApp();
-                });
+                user.auth(alias, pass, (ack) => { if(ack.err) alert("Error"); else startApp(); });
             }
         }
 
-        function logout() {
-            user.leave();
-            localStorage.clear(); // Limpia la sesión guardada
-            location.reload();
-        }
+        function logout() { user.leave(); localStorage.clear(); location.reload(); }
 
         function startApp() {
             document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('user-tag').innerText = `[${user.is.alias}]`;
-            
             if(user.is.alias === ADMIN_NAME) document.getElementById('admin-panel').style.display = 'block';
-            
+            if(Notification.permission === "granted") document.getElementById('notif-btn').innerText = "✅ Notificaciones Activas";
             loadNews();
             loadChat();
-            
-            // Mostrar input de chat solo si está en la pestaña chat
-            switchTab('news');
         }
 
         function switchTab(tab) {
@@ -191,43 +176,33 @@
             document.getElementById('chat-input-container').style.display = (tab === 'chat') ? 'flex' : 'none';
         }
 
-        // --- IMÁGENES ---
-        async function processFile(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const scale = 800 / img.width;
-                        canvas.width = 800;
-                        canvas.height = img.height * scale;
-                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    };
-                };
-            });
-        }
-
         // --- NOTICIAS ---
         async function postNews() {
             const title = document.getElementById('news-title').value;
             const desc = document.getElementById('news-desc').value;
             const file = document.getElementById('news-file').files[0];
             if(!title || !file) return alert("Falta título o imagen");
-            const img = await processFile(file);
-            newsDb.set({ title, desc, img, time: Date.now() });
-            alert("Publicado!");
-            location.reload();
+            
+            // Procesar imagen
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                newsDb.set({ title, desc, img: e.target.result, time: Date.now() });
+                alert("Noticia publicada!");
+                location.reload();
+            };
         }
 
         function loadNews() {
             const container = document.getElementById('news-container');
-            container.innerHTML = "";
             newsDb.map().once((data) => {
                 if(!data || !data.title) return;
+                
+                // Si la noticia es nueva (publicada después de que cargaste la página) -> NOTIFICAR
+                if(data.time > pageLoadTime) {
+                    sendSystemNotification(data.title);
+                }
+
                 const card = document.createElement('div');
                 card.className = 'news-card';
                 card.onclick = () => {
@@ -247,12 +222,6 @@
             input.value = "";
         }
 
-        async function sendChatImage(input) {
-            if(!input.files[0]) return;
-            const img = await processFile(input.files[0]);
-            chatDb.set({ msg: img, sender: user.is.alias, type: 'image', time: Date.now() });
-        }
-
         function loadChat() {
             const box = document.getElementById('chat-messages');
             chatDb.map().once((data) => {
@@ -260,15 +229,15 @@
                 const isMe = data.sender === user.is.alias;
                 const div = document.createElement('div');
                 div.className = `msg ${isMe ? 'me' : ''}`;
-                const content = data.type === 'image' ? `<img src="${data.msg}">` : `<span>${data.msg}</span>`;
+                const content = data.type === 'image' ? `<img src="${data.msg}" style="width:100%">` : `<span>${data.msg}</span>`;
                 div.innerHTML = `<b>${data.sender}</b>${content}`;
                 box.appendChild(div);
                 document.getElementById('tab-chat').scrollTop = document.getElementById('tab-chat').scrollHeight;
             });
         }
 
-        // INICIAR LÓGICA
-        checkSession();
+        if(user.is) startApp();
+        else setTimeout(() => { if(!user.is) document.getElementById('auth-screen').style.display = 'flex'; }, 1000);
     </script>
 </body>
 </html>
