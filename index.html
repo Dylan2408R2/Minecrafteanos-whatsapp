@@ -25,163 +25,209 @@
         #auth-screen {
             position: fixed; inset: 0; z-index: 1000; background: #000;
             display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://wallpaperaccess.com/full/46664.jpg');
+            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://wallpaperaccess.com/full/46664.jpg');
             background-size: cover;
         }
-        .auth-card { background: var(--mc-panel); padding: 30px; border-radius: 12px; text-align: center; width: 300px; border: 1px solid #333; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: var(--mc-green); color: white; font-weight: bold; cursor: pointer; }
+        .auth-card { background: var(--mc-panel); padding: 30px; border-radius: 12px; text-align: center; width: 320px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; font-family: inherit; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: var(--mc-green); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: inherit; }
+        button:hover { filter: brightness(1.2); transform: scale(1.02); }
 
-        /* --- LAYOUT --- */
-        header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 2px solid #000; }
-        nav { display: flex; gap: 15px; background: #252525; padding: 10px 20px; border-bottom: 1px solid #333; }
-        nav span { cursor: pointer; font-weight: bold; color: #888; }
+        /* --- INTERFAZ PRINCIPAL --- */
+        header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 2px solid #000; align-items: center; }
+        nav { display: flex; gap: 20px; background: #252525; padding: 12px 25px; border-bottom: 1px solid #333; }
+        nav span { cursor: pointer; font-weight: bold; color: #888; padding-bottom: 5px; transition: 0.3s; }
         nav span.active { color: var(--mc-green); border-bottom: 2px solid var(--mc-green); }
 
-        .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; }
+        .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; padding-bottom: 120px; }
         .content-area.active { display: block; }
 
-        /* --- NOTICIAS --- */
-        .admin-only { background: #2e3d2e; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; border: 1px solid var(--mc-green); }
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .news-card { background: var(--mc-panel); border-radius: 10px; overflow: hidden; border: 1px solid #333; cursor: pointer; transition: 0.3s; }
-        .news-card:hover { transform: translateY(-5px); border-color: var(--mc-green); }
-        .news-card img { width: 100%; height: 160px; object-fit: cover; }
-        .news-card h3 { padding: 15px; margin: 0; font-size: 18px; }
-        .news-card .desc { padding: 0 15px 15px; color: #aaa; font-size: 14px; display: none; } /* Se muestra al hacer click */
+        /* --- SECCIÓN NOTICIAS --- */
+        .admin-only { background: #1b2e1b; padding: 15px; border-radius: 8px; margin-bottom: 25px; display: none; border: 1px solid var(--mc-green); animation: slideDown 0.4s; }
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        .news-card { background: var(--mc-panel); border-radius: 12px; overflow: hidden; border: 1px solid #333; cursor: pointer; transition: 0.3s; animation: fadeIn 0.6s; }
+        .news-card:hover { transform: translateY(-8px); border-color: var(--mc-green); box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        .news-card img { width: 100%; height: 180px; object-fit: cover; background: #000; border-bottom: 1px solid #333; }
+        .news-card h3 { padding: 15px; margin: 0; font-size: 1.2rem; color: var(--mc-accent); }
+        .news-card .desc { padding: 0 15px 15px; color: #ccc; font-size: 0.95rem; display: none; white-space: pre-wrap; line-height: 1.4; }
 
-        /* --- CHAT --- */
-        #chat-messages { display: flex; flex-direction: column; gap: 10px; }
-        .msg { background: #252525; padding: 10px; border-radius: 8px; max-width: 80%; }
-        .msg b { color: var(--mc-accent); font-size: 12px; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* --- MUSIC PLAYER --- */
-        #music-bar { background: #000; padding: 10px 20px; display: flex; align-items: center; gap: 20px; border-top: 1px solid #333; }
-        audio { height: 30px; filter: invert(1); }
+        /* --- SECCIÓN CHAT --- */
+        #chat-messages { display: flex; flex-direction: column; gap: 12px; }
+        .msg { background: #2a2a2a; padding: 12px; border-radius: 10px; max-width: 80%; border-left: 4px solid var(--mc-green); align-self: flex-start; }
+        .msg.me { align-self: flex-end; border-left: 0; border-right: 4px solid var(--mc-accent); background: #1e331e; }
+        .msg b { color: var(--mc-accent); font-size: 0.75rem; display: block; margin-bottom: 4px; text-transform: uppercase; }
+        .msg img { max-width: 100%; border-radius: 6px; margin-top: 8px; border: 1px solid #444; }
 
+        /* --- REPRODUCTOR Y ENTRADA --- */
+        #music-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #000; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #333; height: 55px; z-index: 10; }
+        audio { height: 32px; filter: invert(1); width: 220px; opacity: 0.8; }
+
+        .input-chat-fixed { position: fixed; bottom: 55px; left: 0; right: 0; padding: 12px 20px; background: var(--mc-panel); display: flex; gap: 12px; border-top: 1px solid #444; z-index: 9; }
+        .file-label { background: #333; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 20px; border: 1px solid #444; transition: 0.2s; }
+        .file-label:hover { background: #444; }
     </style>
 </head>
 <body>
 
-    <!-- LOGIN -->
+    <!-- PANTALLA DE INICIO DE SESIÓN -->
     <div id="auth-screen">
         <div class="auth-card">
-            <h1 style="color:var(--mc-green)">MINECAFTEANOS</h1>
-            <input type="text" id="user-alias" placeholder="Usuario">
+            <h1 style="color:var(--mc-green); margin-top:0; letter-spacing: 1px;">MINECRAFTEANOS</h1>
+            <input type="text" id="user-alias" placeholder="Nombre de Usuario">
             <input type="password" id="user-pass" placeholder="Contraseña">
-            <button onclick="auth('login')">ENTRAR</button>
-            <button onclick="auth('register')" style="background:#444; margin-top:10px; font-size:12px">CREAR CUENTA</button>
+            <button onclick="auth('login')">ENTRAR AL SERVER</button>
+            <button onclick="auth('register')" style="background:#333; margin-top:12px; font-size:12px; color: #bbb;">CREAR CUENTA NUEVA</button>
         </div>
     </div>
 
-    <!-- HEADER & NAV -->
+    <!-- CABECERA -->
     <header>
-        <strong>MINECAFTEANOS <span id="user-tag" style="color:var(--mc-accent); font-size:12px"></span></strong>
-        <button onclick="location.reload()" style="width:auto; padding:5px 10px; background:#aa0000">SALIR</button>
+        <strong style="letter-spacing: 1px;">MINECRAFTEANOS <span id="user-tag" style="color:var(--mc-accent); font-size:11px; margin-left: 10px;"></span></strong>
+        <button onclick="logout()" style="width:auto; padding:6px 15px; background:#aa0000; font-size:11px; border-radius: 4px;">CERRAR SESIÓN</button>
     </header>
+
+    <!-- NAVEGACIÓN -->
     <nav>
-        <span id="nav-news" class="active" onclick="switchTab('news')">INICIO / NOTICIAS</span>
+        <span id="nav-news" class="active" onclick="switchTab('news')">NOTICIAS</span>
         <span id="nav-chat" onclick="switchTab('chat')">CHAT GLOBAL</span>
     </nav>
 
-    <!-- SECCIÓN NOTICIAS -->
+    <!-- CONTENIDO: NOTICIAS -->
     <div id="tab-news" class="content-area active">
-        <!-- Panel exclusivo para Dylan2408R2 -->
+        <!-- Panel para el administrador Dylan2408R2 -->
         <div id="admin-panel" class="admin-only">
-            <h4 style="margin-top:0">Publicar Nueva Noticia (Admin)</h4>
-            <input type="text" id="news-title" placeholder="Título de la noticia">
-            <input type="text" id="news-img" placeholder="URL de la Imagen (Link)">
-            <textarea id="news-desc" style="width:100%; background:#000; color:white; border:1px solid #444; border-radius:6px; padding:10px; box-sizing:border-box" rows="3" placeholder="Descripción completa..."></textarea>
-            <button onclick="postNews()" style="margin-top:10px">PUBLICAR</button>
+            <h4 style="margin:0 0 12px 0; color: var(--mc-accent)">Panel de Administración (Dylan)</h4>
+            <input type="text" id="news-title" placeholder="Título de la Noticia">
+            <div style="margin: 10px 0;">
+                <label style="font-size:13px; color:#aaa; display:block; margin-bottom:5px;">Imagen de portada:</label>
+                <input type="file" id="news-file" accept="image/*" style="font-size: 12px; background: transparent; border: none; padding: 0;">
+            </div>
+            <textarea id="news-desc" rows="4" placeholder="Escribe aquí los detalles de la noticia..."></textarea>
+            <button onclick="postNews()">PUBLICAR EN EL MURO</button>
         </div>
-
         <div id="news-container" class="news-grid">
-            <!-- Las noticias aparecerán aquí -->
+            <!-- Aquí se cargan las noticias dinámicamente -->
         </div>
     </div>
 
-    <!-- SECCIÓN CHAT -->
+    <!-- CONTENIDO: CHAT -->
     <div id="tab-chat" class="content-area">
         <div id="chat-messages"></div>
-        <div style="position:fixed; bottom:70px; left:0; right:0; padding:15px; background:var(--mc-panel); display:flex; gap:10px">
-            <input type="text" id="chat-input" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
-            <button onclick="sendChat()" style="width:100px">ENVIAR</button>
+        <div class="input-chat-fixed">
+            <label class="file-label" title="Enviar Imagen">
+                📷 <input type="file" id="chat-file" accept="image/*" hidden onchange="sendChatImage(this)">
+            </label>
+            <input type="text" id="chat-input" placeholder="Escribe un mensaje en el grupo..." onkeypress="if(event.key==='Enter') sendChat()">
+            <button onclick="sendChat()" style="width:90px">ENVIAR</button>
         </div>
     </div>
 
-    <!-- MUSIC PLAYER -->
+    <!-- REPRODUCTOR DE MÚSICA -->
     <div id="music-bar">
-        <span style="font-size:12px; color:var(--mc-accent)">♫ Minecraft OST</span>
+        <span style="font-size:11px; color:#888; font-weight: bold;">♫ MINECRAFT OST</span>
         <audio id="player" controls loop>
             <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-            <!-- Puedes cambiar este link por cualquier archivo .mp3 directo de internet -->
         </audio>
     </div>
 
     <script>
+        // Inicialización de la base de datos descentralizada Gun.js
         const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun']);
         const user = gun.user().recall({storage: true});
-        const newsDb = gun.get('minecrafteanos_noticias_v1');
-        const chatDb = gun.get('minecrafteanos_chat_v1');
+        const newsDb = gun.get('minecrafteanos_news_final_v1');
+        const chatDb = gun.get('minecrafteanos_chat_final_v1');
 
-        const ADMIN_USER = "Dylan2408R2";
+        const ADMIN_NAME = "Dylan2408R2";
 
-        // --- AUTH ---
+        // --- SISTEMA DE AUTENTICACIÓN ---
         function auth(mode) {
             const alias = document.getElementById('user-alias').value;
             const pass = document.getElementById('user-pass').value;
+            if(!alias || !pass) return alert("Por favor, completa todos los campos.");
+            
             if(mode === 'register') {
-                user.create(alias, pass, (ack) => {
-                    if(ack.err) alert(ack.err); else alert("Cuenta creada!");
+                user.create(alias, pass, (ack) => { 
+                    if(ack.err) alert("Error: " + ack.err); 
+                    else alert("¡Cuenta de Minecrafteano creada! Ahora puedes iniciar sesión."); 
                 });
             } else {
-                user.auth(alias, pass, (ack) => {
-                    if(ack.err) alert("Error"); else startApp();
+                user.auth(alias, pass, (ack) => { 
+                    if(ack.err) alert("Usuario o contraseña incorrectos."); 
+                    else startApp(); 
                 });
             }
         }
 
+        function logout() { user.leave(); location.reload(); }
+
         function startApp() {
             document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('user-tag').innerText = "@" + user.is.alias;
+            document.getElementById('user-tag').innerText = `[${user.is.alias}]`;
             
-            // Si es Dylan, mostramos el panel de admin
-            if(user.is.alias === ADMIN_USER) {
+            // Verificación de administrador
+            if(user.is.alias === ADMIN_NAME) {
                 document.getElementById('admin-panel').style.display = 'block';
             }
             
             loadNews();
             loadChat();
-            document.getElementById('player').play().catch(e => console.log("Auto-play bloqueado"));
+            
+            // Intentar reproducir música (algunos navegadores requieren interacción previa)
+            const p = document.getElementById('player');
+            p.volume = 0.4;
+            p.play().catch(() => console.log("Música en espera de interacción."));
         }
 
-        // --- NAVEGACIÓN ---
         function switchTab(tab) {
-            document.querySelectorAll('.content-area').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('nav span').forEach(s => s.classList.remove('active'));
-            document.getElementById('tab-' + tab).classList.add('active');
-            document.getElementById('nav-' + tab).classList.add('active');
+            document.querySelectorAll('.content-area, nav span').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-'+tab).classList.add('active');
+            document.getElementById('nav-'+tab).classList.add('active');
         }
 
-        // --- NOTICIAS ---
-        function postNews() {
+        // --- PROCESAMIENTO DE IMÁGENES (REDIMENSIÓN) ---
+        async function processFile(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7)); 
+                    };
+                };
+            });
+        }
+
+        // --- LÓGICA DE NOTICIAS ---
+        async function postNews() {
             const title = document.getElementById('news-title').value;
-            const img = document.getElementById('news-img').value;
             const desc = document.getElementById('news-desc').value;
+            const fileInput = document.getElementById('news-file');
+            
+            if(!title || !fileInput.files[0]) return alert("La noticia debe tener al menos un título y una imagen.");
 
-            if(!title || !img) return alert("Falta título o imagen");
-
-            newsDb.set({ title, img, desc, time: Date.now() });
-            alert("Noticia publicada!");
-            document.getElementById('news-title').value = "";
-            document.getElementById('news-img').value = "";
-            document.getElementById('news-desc').value = "";
+            const imgBase64 = await processFile(fileInput.files[0]);
+            newsDb.set({ title, desc, img: imgBase64, author: user.is.alias, time: Date.now() });
+            
+            alert("¡Noticia publicada en Minecrafteanos!");
+            location.reload();
         }
 
         function loadNews() {
             const container = document.getElementById('news-container');
-            newsDb.map().once((data, id) => {
-                if(!data) return;
+            newsDb.map().once((data) => {
+                if(!data || !data.title) return;
                 const card = document.createElement('div');
                 card.className = 'news-card';
                 card.onclick = () => {
@@ -189,34 +235,45 @@
                     d.style.display = d.style.display === 'block' ? 'none' : 'block';
                 };
                 card.innerHTML = `
-                    <img src="${data.img}" onerror="this.src='https://via.placeholder.com/300x150?text=Minecraft'">
+                    <img src="${data.img}">
                     <h3>${data.title}</h3>
-                    <div class="desc">${data.desc}</div>
+                    <div class="desc">${data.desc || 'Sin descripción adicional.'}</div>
                 `;
                 container.prepend(card);
             });
         }
 
-        // --- CHAT ---
+        // --- LÓGICA DEL CHAT ---
         function sendChat() {
             const input = document.getElementById('chat-input');
-            if(!input.value) return;
-            chatDb.set({ msg: input.value, sender: user.is.alias, time: Date.now() });
+            if(!input.value.trim()) return;
+            chatDb.set({ msg: input.value, sender: user.is.alias, type: 'text', time: Date.now() });
             input.value = "";
+        }
+
+        async function sendChatImage(input) {
+            if(!input.files[0]) return;
+            const imgBase64 = await processFile(input.files[0]);
+            chatDb.set({ msg: imgBase64, sender: user.is.alias, type: 'image', time: Date.now() });
         }
 
         function loadChat() {
             const box = document.getElementById('chat-messages');
             chatDb.map().once((data) => {
-                if(!data) return;
+                if(!data || !data.sender) return;
+                const isMe = data.sender === user.is.alias;
                 const div = document.createElement('div');
-                div.className = 'msg';
-                div.innerHTML = `<b>${data.sender}:</b><br>${data.msg}`;
+                div.className = `msg ${isMe ? 'me' : ''}`;
+                let content = data.type === 'image' ? `<img src="${data.msg}">` : `<span>${data.msg}</span>`;
+                div.innerHTML = `<b>${data.sender}</b>${content}`;
                 box.appendChild(div);
-                document.getElementById('tab-chat').scrollTop = box.scrollHeight;
+                // Scroll automático al último mensaje
+                const tab = document.getElementById('tab-chat');
+                tab.scrollTop = tab.scrollHeight;
             });
         }
 
+        // Re-logueo automático
         if(user.is) startApp();
     </script>
 </body>
