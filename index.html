@@ -4,14 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minecrafteanos | Oficial</title>
-    
-    <!-- Fuente Pixel -->
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    
-    <!-- Librerías GunDB -->
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
-    
     <style>
         :root {
             --mc-green: #3aa03a;
@@ -31,12 +26,16 @@
 
         h1, h2, h3, .mc-font { font-family: 'VT323', monospace; text-transform: uppercase; }
 
-        /* --- CARTEL DE NOTIFICACIONES --- */
+        /* Indicador de Red */
+        #network-status {
+            position: fixed; top: 5px; right: 5px; font-size: 10px; padding: 2px 5px;
+            background: rgba(0,0,0,0.5); border-radius: 3px; z-index: 6000;
+        }
+
         #noti-banner {
             display: none; background: rgba(0,0,0,0.9); border: 3px solid var(--mc-accent);
             padding: 15px; position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
             z-index: 5000; width: 90%; max-width: 400px; text-align: center;
-            box-shadow: 0 0 20px rgba(0,0,0,1);
         }
 
         .mc-btn {
@@ -46,13 +45,12 @@
         }
         .mc-btn:hover { background: var(--mc-green); }
 
-        /* --- UI COMPONENTES --- */
         #loading-screen { position: fixed; inset: 0; z-index: 2000; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         #auth-screen { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; }
         .auth-card { background: rgba(0,0,0,0.85); padding: 30px; border: 4px solid #555; width: 320px; text-align: center; }
         
-        header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 4px solid #000; align-items: center; backdrop-filter: blur(5px); }
-        .pfp-container { width: 42px; height: 42px; border: 3px solid #000; background: #333; cursor: pointer; }
+        header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 4px solid #000; align-items: center; }
+        .pfp-container { width: 42px; height: 42px; border: 3px solid #000; background: #333; cursor: pointer; overflow: hidden; }
         .pfp-container img { width: 100%; height: 100%; image-rendering: pixelated; object-fit: cover; }
         
         nav { display: flex; background: rgba(34, 34, 34, 0.9); border-bottom: 2px solid #000; }
@@ -75,48 +73,46 @@
 </head>
 <body>
 
-    <!-- CARTEL SIMPLE DE NOTIFICACIONES -->
+    <div id="network-status" style="color: red;">● Desconectado</div>
+
     <div id="noti-banner">
-        <p class="mc-font" style="margin-bottom:10px;">Activa las notificaciones para ver las actualizaciones más nuevas</p>
-        <button class="mc-btn" onclick="askPermission()">ACTIVAR NOTIFICACIONES</button>
+        <p class="mc-font" style="margin-bottom:10px;">Activa las notificaciones</p>
+        <button class="mc-btn" onclick="askPermission()">ACTIVAR</button>
     </div>
 
     <div id="loading-screen">
-        <h2 class="mc-font" style="color:var(--mc-green); font-size: 3rem;">CARGANDO</h2>
+        <h2 class="mc-font" style="color:var(--mc-green); font-size: 3rem;">CONECTANDO...</h2>
     </div>
 
     <div id="auth-screen">
         <div class="auth-card">
             <h1 style="color:var(--mc-green); margin:0 0 20px 0; font-size: 2.5rem;">MINECRAFTEANOS</h1>
-            <input type="text" id="user-alias" placeholder="Tu nombre de Minecraft">
-            <input type="password" id="user-pass" placeholder="Contraseña">
+            <input type="text" id="user-alias" placeholder="Usuario">
+            <input type="password" id="user-pass" placeholder="Clave">
             <button class="mc-btn" style="width:100%" onclick="auth('login')">ENTRAR</button>
             <button class="mc-btn" style="width:100%; margin-top:10px; font-size:0.9rem; background:#333" onclick="auth('register')">CREAR CUENTA</button>
         </div>
     </div>
 
     <header>
-        <strong class="mc-font" style="font-size: 1.8rem; color: var(--mc-green); text-shadow: 2px 2px #000;">MINECRAFTEANOS</strong>
+        <strong class="mc-font" style="font-size: 1.8rem; color: var(--mc-green);">MINECRAFTEANOS</strong>
         <div class="user-controls" style="display:flex; align-items:center;">
             <label class="pfp-container">
                 <img id="my-pfp" src="https://mc-heads.net/avatar/steve">
                 <input type="file" id="pfp-input" hidden accept="image/*" onchange="uploadPFP(this)">
             </label>
-            <button onclick="logout()" style="background: #aa0000; border:2px solid #000; color:white; padding:5px 10px; cursor:pointer; margin-left:10px; font-family:'VT323';">SALIR</button>
         </div>
     </header>
 
     <nav>
         <span id="nav-news" class="active" onclick="switchTab('news')">NOTICIAS</span>
-        <span id="nav-chat" onclick="switchTab('chat')">CHAT GLOBAL</span>
+        <span id="nav-chat" onclick="switchTab('chat')">CHAT</span>
     </nav>
 
     <div id="tab-news" class="content-area active">
-        <div id="admin-panel" style="display:none; background:rgba(0,0,0,0.6); padding:20px; border:2px dashed var(--mc-green); margin-bottom:30px; max-width:800px; margin: 0 auto 30px auto;">
-            <h3 style="margin-top:0">Publicar Noticia</h3>
-            <input type="text" id="news-title" placeholder="Título...">
+        <div id="admin-panel" style="display:none; background:rgba(0,0,0,0.6); padding:10px; border:1px dashed var(--mc-green); margin-bottom:20px;">
+            <input type="text" id="news-title" placeholder="Título">
             <input type="file" id="news-file" accept="image/*">
-            <textarea id="news-desc" rows="3" placeholder="Contenido..."></textarea>
             <button class="mc-btn" onclick="postNews()">PUBLICAR</button>
         </div>
         <div id="news-container"></div>
@@ -127,120 +123,80 @@
     </div>
 
     <div id="chat-input-container" class="input-chat-fixed">
-        <input type="text" id="chat-input" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
-        <button class="mc-btn" onclick="sendChat()" style="width:120px">ENVIAR</button>
+        <input type="text" id="chat-input" placeholder="Mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
+        <button class="mc-btn" onclick="sendChat()" style="width:100px">ENVIAR</button>
     </div>
 
     <script>
-        // Configuración de GunDB
+        // LISTA DE PEERS REFORZADA (5 Servidores)
         const gun = Gun({
-            peers: ['https://gun-manhattan.herokuapp.com/gun', 'https://relay.peer.ooo/gun'],
-            localStorage: true
+            peers: [
+                'https://gun-manhattan.herokuapp.com/gun',
+                'https://relay.peer.ooo/gun',
+                'https://gun-us.herokuapp.com/gun',
+                'https://gun-matrix.herokuapp.com/gun',
+                'https://gun-eu.herokuapp.com/gun'
+            ],
+            localStorage: true,
+            retry: 1000
+        });
+
+        // Monitor de conexión
+        gun.on('hi', () => {
+            document.getElementById('network-status').style.color = '#55ff55';
+            document.getElementById('network-status').innerText = '● Conectado';
+        });
+        gun.on('bye', () => {
+            document.getElementById('network-status').style.color = 'red';
+            document.getElementById('network-status').innerText = '● Reconectando...';
         });
 
         const user = gun.user().recall({storage: true});
-        const newsDb = gun.get('mc_noticias_final_v1');
-        const chatDb = gun.get('mc_chat_final_v1');
-        const profilesDb = gun.get('mc_perfiles_final_v1');
+        const newsDb = gun.get('mc_noticias_final_v2'); // Versión 2 para limpiar caché
+        const chatDb = gun.get('mc_chat_final_v2');
+        const profilesDb = gun.get('mc_perfiles_final_v2');
         
         const ADMIN_NAME = "Dylangamer2345";
         let appIniciada = false;
         const horaDeEntrada = Date.now();
 
-        // --- NOTIFICACIONES ---
         function askPermission() {
-            Notification.requestPermission().then(perm => {
-                if(perm === 'granted') document.getElementById('noti-banner').style.display = 'none';
-            });
+            Notification.requestPermission().then(perm => { if(perm === 'granted') document.getElementById('noti-banner').style.display = 'none'; });
         }
 
-        function showNotification(title, body) {
-            if (Notification.permission === 'granted') {
-                new Notification(title, {
-                    body: body,
-                    icon: 'https://mc-heads.net/avatar/Dylangamer2345'
-                });
-            }
-        }
-
-        // --- LÓGICA DE LA APP ---
-        gun.on('auth', () => {
-            localStorage.setItem('mc_active', 'true');
-            startApp();
-        });
+        gun.on('auth', () => { startApp(); });
 
         function startApp() {
             if (appIniciada) return;
             appIniciada = true;
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'none';
-
-            // Mostrar cartel si no hay permiso
-            if (Notification.permission === 'default') {
-                document.getElementById('noti-banner').style.display = 'block';
-            }
+            if (Notification.permission === 'default') document.getElementById('noti-banner').style.display = 'block';
+            if(user.is && user.is.alias === ADMIN_NAME) document.getElementById('admin-panel').style.display = 'block';
             
-            if(user.is && user.is.alias === ADMIN_NAME) {
-                document.getElementById('admin-panel').style.display = 'block';
-            }
-
-            profilesDb.get(user.is.alias).once(d => { 
-                document.getElementById('my-pfp').src = (d && d.pfp) ? d.pfp : `https://mc-heads.net/avatar/${user.is.alias}`; 
-            });
-
             loadNews();
             loadChat();
         }
 
-        function loadNews() {
-            newsDb.map().on((data, id) => {
-                if(!data || !data.title || document.getElementById('news-'+id)) return;
-                
-                // Si la noticia llegó DESPUÉS de abrir la web y no soy yo el autor, notifico
-                if (data.time > horaDeEntrada && data.author !== user.is.alias) {
-                    showNotification("NUEVA NOTICIA", data.title);
-                }
-
-                const card = document.createElement('div');
-                card.id = 'news-' + id;
-                card.className = 'news-card';
-                card.innerHTML = `<img src="${data.img}"><div class="news-card-content"><h3 style="color:var(--mc-accent)">${data.title}</h3><p>${data.desc || ''}</p></div>`;
-                document.getElementById('news-container').prepend(card);
-            });
-        }
-
-        function postNews() {
-            const title = document.getElementById('news-title').value;
-            const desc = document.getElementById('news-desc').value;
-            const file = document.getElementById('news-file').files[0];
-            if(!title || !file) return alert("Pon título e imagen");
-
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                newsDb.set({ title, desc, img: e.target.result, author: user.is.alias, time: Date.now() });
-                alert("¡Publicada!");
-                document.getElementById('news-title').value = "";
-                document.getElementById('news-desc').value = "";
-            };
-        }
-
-        // --- CHAT Y AUTH (Misma lógica funcional) ---
-        function auth(mode) {
-            const alias = document.getElementById('user-alias').value.trim();
-            const pass = document.getElementById('user-pass').value.trim();
-            if(!alias || !pass) return alert("Completa los datos");
-            if(mode === 'register') user.create(alias, pass, (ack) => { if(ack.err) alert(ack.err); else alert("¡Creada! Dale a Entrar"); });
-            else user.auth(alias, pass, (ack) => { if(ack.err) alert("Error"); else startApp(); });
-        }
-
-        function logout() { localStorage.clear(); location.reload(); }
-
+        // --- SOLUCIÓN AL ENVÍO DEL CELULAR ---
         function sendChat() {
             const input = document.getElementById('chat-input');
-            if(!input.value.trim()) return;
-            chatDb.set({ msg: input.value, sender: user.is.alias, time: Date.now() });
+            const txt = input.value.trim();
+            if(!txt || !user.is) return;
+
+            // Creamos el objeto del mensaje
+            const msgObj = { msg: txt, sender: user.is.alias, time: Date.now() };
+            
+            // "Empujamos" el mensaje al chat
+            chatDb.set(msgObj);
+            
             input.value = "";
+            
+            // Truco extra: Si es celular, forzamos un ping al peer
+            if(/Android|iPhone/i.test(navigator.userAgent)) {
+                console.log("Enviando desde celular, forzando sincronización...");
+                gun.get('network_ping').put({ time: Date.now() });
+            }
         }
 
         function loadChat() {
@@ -250,21 +206,43 @@
                 const div = document.createElement('div');
                 div.className = `msg ${isMe ? 'me' : ''}`;
                 div.id = 'msg-' + id;
-                div.innerHTML = `<img style="width:32px; height:32px; border:1px solid #000" src="https://mc-heads.net/avatar/${data.sender}"><div><b>${data.sender}</b><div>${data.msg}</div></div>`;
+                div.innerHTML = `<img style="width:32px; height:32px;" src="https://mc-heads.net/avatar/${data.sender}"><div><b>${data.sender}</b><div>${data.msg}</div></div>`;
                 document.getElementById('chat-messages').appendChild(div);
                 document.getElementById('tab-chat').scrollTop = document.getElementById('tab-chat').scrollHeight;
             });
         }
 
-        function uploadPFP(input) {
-            const file = input.files[0];
-            if (!file) return;
+        function loadNews() {
+            newsDb.map().on((data, id) => {
+                if(!data || !data.title || document.getElementById('news-'+id)) return;
+                if (data.time > horaDeEntrada && data.author !== user.is.alias) {
+                    if (Notification.permission === 'granted') new Notification("NUEVA NOTICIA", {body: data.title});
+                }
+                const card = document.createElement('div');
+                card.id = 'news-' + id;
+                card.className = 'news-card';
+                card.innerHTML = `<img src="${data.img}"><div style="padding:10px;"><h3>${data.title}</h3></div>`;
+                document.getElementById('news-container').prepend(card);
+            });
+        }
+
+        function postNews() {
+            const title = document.getElementById('news-title').value;
+            const file = document.getElementById('news-file').files[0];
+            if(!title || !file) return;
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (e) => {
-                profilesDb.get(user.is.alias).put({ pfp: e.target.result });
-                document.getElementById('my-pfp').src = e.target.result;
+                newsDb.set({ title, img: e.target.result, author: user.is.alias, time: Date.now() });
+                alert("¡Publicada!");
             };
+        }
+
+        function auth(mode) {
+            const alias = document.getElementById('user-alias').value.trim();
+            const pass = document.getElementById('user-pass').value.trim();
+            if(mode === 'register') user.create(alias, pass, (ack) => { if(ack.err) alert(ack.err); else alert("¡Listo!"); });
+            else user.auth(alias, pass, (ack) => { if(ack.err) alert("Error"); else startApp(); });
         }
 
         function switchTab(tab) {
@@ -275,12 +253,7 @@
         }
 
         window.onload = () => {
-            if (localStorage.getItem('mc_active')) {
-                setTimeout(() => { if (!appIniciada) { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex'; } }, 5000);
-            } else {
-                document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('auth-screen').style.display = 'flex';
-            }
+            setTimeout(() => { if (!appIniciada) { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex'; } }, 4000);
         };
     </script>
 </body>
