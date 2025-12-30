@@ -4,151 +4,191 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minecrafteanos | Oficial</title>
+    <!-- Google Fonts: Estética Pixel -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
     <style>
         :root {
-            --mc-green: #388E3C;
-            --mc-dark: #121212;
-            --mc-panel: #1e1e1e;
+            --mc-green: #3aa03a;
+            --mc-dark-green: #2a7a2a;
+            --mc-dark: #1e1e1e;
+            --mc-panel: #313131;
             --mc-text: #ffffff;
-            --mc-accent: #81C784;
+            --mc-accent: #ffcc00; /* Oro Minecraft */
+            --mc-border: #000000;
+            --mc-gray-btn: #aaaaaa;
         }
 
         body { 
-            background: var(--mc-dark); color: var(--mc-text); 
+            background: #121212; color: var(--mc-text); 
             font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; 
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
+        h1, h2, h3, .mc-font { font-family: 'VT323', monospace; text-transform: uppercase; }
+
+        /* --- ESTILO BOTONES MINECRAFT --- */
+        .mc-btn {
+            background: #555;
+            border: 2px solid #000;
+            border-top-color: #888;
+            border-left-color: #888;
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            text-shadow: 2px 2px #000;
+            transition: all 0.1s;
+        }
+        .mc-btn:hover { background: var(--mc-green); border-top-color: #5fb45f; border-left-color: #5fb45f; }
+        .mc-btn:active { border: 2px solid #fff; padding-top: 11px; padding-bottom: 9px; }
+
         /* --- PANTALLA CARGANDO --- */
         #loading-screen {
             position: fixed; inset: 0; z-index: 2000; background: #000;
-            display: flex; align-items: center; justify-content: center;
-            flex-direction: column;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
         }
 
         /* --- PANTALLA LOGIN --- */
         #auth-screen {
-            position: fixed; inset: 0; z-index: 1000; background: #000;
+            position: fixed; inset: 0; z-index: 1000;
             display: none; align-items: center; justify-content: center;
-            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://wallpaperaccess.com/full/46664.jpg');
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://wallpaperaccess.com/full/46664.jpg');
             background-size: cover;
         }
-        .auth-card { background: var(--mc-panel); padding: 30px; border-radius: 12px; text-align: center; width: 320px; border: 1px solid #333; }
+        .auth-card { background: rgba(0,0,0,0.8); padding: 30px; border: 4px solid #555; width: 320px; text-align: center; }
         
         /* --- CABECERA --- */
-        header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 2px solid #000; align-items: center; }
-        .user-controls { display: flex; align-items: center; gap: 15px; }
-        .pfp-container { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--mc-green); overflow: hidden; cursor: pointer; background: #333; }
-        .pfp-container img { width: 100%; height: 100%; object-fit: cover; }
-        
-        nav { display: flex; gap: 20px; background: #252525; padding: 12px 25px; border-bottom: 1px solid #333; }
-        nav span { cursor: pointer; font-weight: bold; color: #888; }
-        nav span.active { color: var(--mc-green); border-bottom: 2px solid var(--mc-green); }
+        header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 4px solid #000; align-items: center; }
+        .server-status { font-size: 0.8rem; color: #55ff55; display: flex; align-items: center; gap: 5px; }
+        .dot { height: 8px; width: 8px; background-color: #55ff55; border-radius: 50%; display: inline-block; animation: blink 1s infinite; }
 
-        .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; padding-bottom: 120px; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        .pfp-container { width: 42px; height: 42px; border: 3px solid #000; background: #333; cursor: pointer; position: relative; }
+        .pfp-container img { width: 100%; height: 100%; image-rendering: pixelated; }
+        
+        nav { display: flex; background: #222; border-bottom: 2px solid #000; }
+        nav span { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-family: 'VT323', monospace; font-size: 1.3rem; color: #aaa; border-right: 1px solid #333; }
+        nav span.active { color: var(--mc-accent); background: #333; border-bottom: 3px solid var(--mc-accent); }
+
+        .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; }
         .content-area.active { display: block; }
 
         /* --- NOTICIAS --- */
-        .news-card { background: var(--mc-panel); margin-bottom: 25px; border-radius: 10px; overflow: hidden; border: 1px solid #333; max-width: 850px; margin: 0 auto 25px auto; }
-        .news-card img { width: 100%; aspect-ratio: 1416 / 672; object-fit: cover; display: block; }
-        .news-card-content { padding: 20px; }
+        .news-card { background: var(--mc-panel); margin: 0 auto 25px auto; border: 3px solid #000; max-width: 800px; box-shadow: 5px 5px 0px rgba(0,0,0,0.5); }
+        .news-card img { width: 100%; border-bottom: 3px solid #000; display: block; }
+        .news-card-content { padding: 15px; }
+        .news-card-content h3 { margin: 0; color: var(--mc-accent); font-size: 1.5rem; }
 
-        /* --- CHAT (Letras con espacio) --- */
-        #chat-messages { display: flex; flex-direction: column; gap: 12px; }
-        .msg { background: #252525; padding: 12px; border-radius: 8px; max-width: 80%; border-left: 4px solid var(--mc-green); display: flex; gap: 12px; }
-        .msg.me { align-self: flex-end; border-left: 0; border-right: 4px solid var(--mc-accent); background: #1e331e; flex-direction: row-reverse; }
-        .msg b { color: var(--mc-accent); margin-right: 5px; } /* Espacio entre nombre y dos puntos */
+        /* --- CHAT --- */
+        #chat-messages { display: flex; flex-direction: column; gap: 8px; max-width: 900px; margin: 0 auto; }
+        .msg { background: rgba(255,255,255,0.05); padding: 10px; display: flex; gap: 12px; border-left: 4px solid #555; }
+        .msg.me { border-left: 0; border-right: 4px solid var(--mc-accent); background: rgba(255,204,0,0.05); }
+        .msg-time { font-size: 0.7rem; color: #666; margin-left: auto; }
+        .chat-pfp { width: 32px; height: 32px; border: 2px solid #000; image-rendering: pixelated; }
 
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 6px; background: var(--mc-green); color: white; font-weight: bold; cursor: pointer; }
+        input, textarea { 
+            width: 100%; padding: 12px; margin: 8px 0; background: #000; color: #55ff55; 
+            border: 2px solid #555; font-family: 'Consolas', monospace; box-sizing: border-box; 
+        }
 
         /* --- FOOTER --- */
-        #footer-controls { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; }
-        .input-chat-fixed { padding: 12px; background: var(--mc-panel); display: flex; gap: 10px; border-top: 1px solid #444; }
+        .input-chat-fixed { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            padding: 15px; background: #222; display: none; gap: 10px; border-top: 3px solid #000; 
+        }
+
+        /* Scrollbar estilo dark */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #444; border: 1px solid #000; }
     </style>
 </head>
 <body>
 
-    <!-- Pantalla de carga inicial -->
     <div id="loading-screen">
-        <h2 style="color:var(--mc-green)">MINECRAFTEANOS</h2>
-        <p>Cargando sesión...</p>
+        <h2 style="color:var(--mc-green); font-size: 3rem;">MINECRAFTEANOS</h2>
+        <div class="server-status"><span class="dot"></span> CARGANDO MUNDO...</div>
     </div>
 
     <div id="auth-screen">
         <div class="auth-card">
-            <h1 style="color:var(--mc-green); margin:0 0 20px 0;">MINECRAFTEANOS</h1>
-            <input type="text" id="user-alias" placeholder="Usuario">
+            <h1 style="color:var(--mc-green); margin:0 0 20px 0; font-size: 2.5rem;">LOGIN</h1>
+            <input type="text" id="user-alias" placeholder="Usuario de Minecraft">
             <input type="password" id="user-pass" placeholder="Contraseña">
-            <button onclick="auth('login')">ENTRAR</button>
-            <button onclick="auth('register')" style="background:#333; margin-top:10px; font-size:12px">CREAR CUENTA</button>
+            <button class="mc-btn" style="width:100%" onclick="auth('login')">ENTRAR</button>
+            <button class="mc-btn" style="width:100%; margin-top:10px; font-size:0.9rem; background:#333" onclick="auth('register')">REGISTRARSE</button>
         </div>
     </div>
 
     <header>
-        <div><strong>MINECRAFTEANOS</strong></div>
+        <div>
+            <strong class="mc-font" style="font-size: 1.5rem; color: var(--mc-green);">MINECRAFTEANOS</strong>
+            <div class="server-status"><span class="dot"></span> Servidor Online</div>
+        </div>
         <div class="user-controls">
-            <label class="pfp-container">
-                <img id="my-pfp" src="https://www.gravatar.com/avatar/0?d=mp">
+            <label class="pfp-container" title="Cambiar Foto">
+                <img id="my-pfp" src="https://mc-heads.net/avatar/steve">
                 <input type="file" id="pfp-input" hidden accept="image/*" onchange="uploadPFP(this)">
             </label>
-            <button onclick="logout()" style="width:auto; padding:5px 10px; background:#aa0000; font-size:10px">SALIR</button>
+            <button onclick="logout()" style="background: #aa0000; border:none; color:white; padding:4px 8px; cursor:pointer; font-size:10px; margin-left:10px;">X</button>
         </div>
     </header>
 
     <nav>
         <span id="nav-news" class="active" onclick="switchTab('news')">NOTICIAS</span>
-        <span id="nav-chat" onclick="switchTab('chat')">CHAT</span>
+        <span id="nav-chat" onclick="switchTab('chat')">CHAT GLOBAL</span>
     </nav>
 
     <div id="tab-news" class="content-area active">
-        <div id="admin-panel" style="display:none; background:#1b2e1b; padding:15px; border-radius:8px; border:1px solid var(--mc-green); margin-bottom:20px;">
-            <h4 style="margin:0 0 10px 0">Panel Admin (Dylan)</h4>
-            <input type="text" id="news-title" placeholder="Título">
+        <div id="admin-panel" style="display:none; background:#252525; padding:20px; border:2px dashed var(--mc-green); margin-bottom:30px; max-width:800px; margin-left:auto; margin-right:auto;">
+            <h3 style="margin-top:0">Panel de Comandos (Dylan)</h3>
+            <input type="text" id="news-title" placeholder="Título de la noticia...">
             <input type="file" id="news-file" accept="image/*">
-            <textarea id="news-desc" placeholder="Descripción..."></textarea>
-            <button onclick="postNews()">PUBLICAR NOTICIA</button>
+            <textarea id="news-desc" rows="3" placeholder="Escribe el contenido aquí..."></textarea>
+            <button class="mc-btn" onclick="postNews()">PUBLICAR EN EL FEED</button>
         </div>
         <div id="news-container"></div>
     </div>
 
-    <div id="tab-chat" class="content-area">
+    <div id="tab-chat" class="content-area" style="padding-bottom: 100px;">
         <div id="chat-messages"></div>
     </div>
 
-    <div id="footer-controls">
-        <div id="chat-input-container" class="input-chat-fixed" style="display:none">
-            <input type="text" id="chat-input" placeholder="Mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
-            <button onclick="sendChat()" style="width:80px">ENVIAR</button>
-        </div>
+    <div id="chat-input-container" class="input-chat-fixed">
+        <input type="text" id="chat-input" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
+        <button class="mc-btn" onclick="sendChat()" style="width:120px">ENVIAR</button>
     </div>
 
     <script>
-        // Peers actualizados y más estables
         const gun = Gun({
             peers: [
                 'https://gun-manhattan.herokuapp.com/gun',
-                'https://peer.wall.org/gun',
                 'https://gundb-relay-ml9v.onrender.com/gun'
             ],
             localStorage: true
         });
 
         const user = gun.user().recall({storage: true});
-        const newsDb = gun.get('mc_news_v20');
-        const chatDb = gun.get('mc_chat_v20');
-        const profilesDb = gun.get('mc_profiles_v20');
+        const newsDb = gun.get('mc_news_v21'); // Versión actualizada
+        const chatDb = gun.get('mc_chat_v21');
+        const profilesDb = gun.get('mc_profiles_v21');
         
-        const msgSound = new Audio('mensaje.mp3');
         const ADMIN_NAME = "Dylan2408R2";
         const pageLoadTime = Date.now();
         let appIniciada = false;
 
-        // --- DETECTOR DE AUTENTICACIÓN ---
+        // --- UTILIDADES ---
+        const getHead = (name) => `https://mc-heads.net/avatar/${name}/32`;
+        const formatTime = (ms) => {
+            const d = new Date(ms);
+            return d.getHours() + ":" + d.getMinutes().toString().padStart(2, '0');
+        };
+
         gun.on('auth', () => {
-            console.log("Sesión recuperada con éxito");
             localStorage.setItem('mc_sesion_activa', 'true');
             startApp();
         });
@@ -157,6 +197,7 @@
             if (appIniciada) return;
             appIniciada = true;
             
+            document.getElementById('loading-screen').style.fadeOut = "slow";
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'none';
             
@@ -164,32 +205,30 @@
                 document.getElementById('admin-panel').style.display = 'block';
             }
 
+            // Cargar PFP del usuario o skin por defecto
             profilesDb.get(user.is.alias).once(d => { 
-                if(d && d.pfp) document.getElementById('my-pfp').src = d.pfp; 
+                document.getElementById('my-pfp').src = (d && d.pfp) ? d.pfp : getHead(user.is.alias); 
             });
 
             loadNews();
             loadChat();
         }
 
-        // --- LOGIN / REGISTER ---
+        // --- AUTH ---
         function auth(mode) {
             const alias = document.getElementById('user-alias').value;
             const pass = document.getElementById('user-pass').value;
-            if(!alias || !pass) return alert("Faltan datos");
+            if(!alias || !pass) return alert("¡Escribe tu nombre y clave!");
 
             if(mode === 'register') {
                 user.create(alias, pass, (ack) => {
                     if(ack.err) alert(ack.err);
-                    else alert("Cuenta creada. Ahora dale a ENTRAR");
+                    else alert("¡Cuenta creada! Haz clic en ENTRAR");
                 });
             } else {
                 user.auth(alias, pass, (ack) => {
-                    if(ack.err) alert("Error: " + ack.err);
-                    else {
-                        localStorage.setItem('mc_sesion_activa', 'true');
-                        startApp();
-                    }
+                    if(ack.err) alert("Datos incorrectos");
+                    else startApp();
                 });
             }
         }
@@ -200,14 +239,16 @@
             location.reload();
         }
 
-        // --- CHAT (ESPACIO CORREGIDO) ---
+        // --- CHAT ---
         function sendChat() {
             const input = document.getElementById('chat-input');
             if(!input.value.trim()) return;
-            chatDb.set({ msg: input.value, sender: user.is.alias, time: Date.now() });
+            chatDb.set({ 
+                msg: input.value, 
+                sender: user.is.alias, 
+                time: Date.now() 
+            });
             input.value = "";
-            msgSound.currentTime = 0;
-            msgSound.play().catch(()=>{});
         }
 
         function loadChat() {
@@ -220,16 +261,19 @@
                 div.className = `msg ${isMe ? 'me' : ''}`;
                 div.id = 'msg-' + id;
                 
-                // Formato exacto: "Nombre: Mensaje"
                 div.innerHTML = `
-                    <img class="chat-pfp" id="pfp-${id}" src="https://www.gravatar.com/avatar/0?d=mp">
-                    <div>
-                        <b>${data.sender}:</b>
-                        <span>${data.msg}</span>
+                    <img class="chat-pfp" id="pfp-${id}" src="${getHead(data.sender)}">
+                    <div style="width:100%">
+                        <div style="display:flex; justify-content:space-between; align-items:center">
+                            <b class="mc-font" style="color:${isMe ? 'var(--mc-accent)' : 'var(--mc-green)'}">${data.sender}</b>
+                            <span class="msg-time">${formatTime(data.time)}</span>
+                        </div>
+                        <div style="margin-top:4px; font-size:0.95rem;">${data.msg}</div>
                     </div>
                 `;
                 box.appendChild(div);
 
+                // Si tiene foto personalizada, reemplazar la skin
                 profilesDb.get(data.sender).once((prof) => {
                     if(prof && prof.pfp) {
                         const img = document.getElementById(`pfp-${id}`);
@@ -237,10 +281,6 @@
                     }
                 });
 
-                if(data.time > pageLoadTime && !isMe) {
-                    msgSound.currentTime = 0;
-                    msgSound.play().catch(()=>{});
-                }
                 document.getElementById('tab-chat').scrollTop = document.getElementById('tab-chat').scrollHeight;
             });
         }
@@ -253,7 +293,14 @@
                 const card = document.createElement('div');
                 card.id = 'news-' + id;
                 card.className = 'news-card';
-                card.innerHTML = `<img src="${data.img}"><div class="news-card-content"><h3>${data.title}</h3><p>${data.desc || ''}</p></div>`;
+                card.innerHTML = `
+                    <img src="${data.img}">
+                    <div class="news-card-content">
+                        <h3>${data.title}</h3>
+                        <p style="color:#ccc; line-height:1.4;">${data.desc || ''}</p>
+                        <small style="color:#555">Publicado por Admin</small>
+                    </div>
+                `;
                 container.prepend(card);
             });
         }
@@ -262,12 +309,14 @@
             const title = document.getElementById('news-title').value;
             const desc = document.getElementById('news-desc').value;
             const file = document.getElementById('news-file').files[0];
-            if(!title || !file) return alert("Faltan datos");
+            if(!title || !file) return alert("Falta imagen o título");
+            
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (e) => {
                 newsDb.set({ title, desc, img: e.target.result, time: Date.now() });
-                alert("Publicado!");
+                alert("¡Noticia publicada en el bloque!");
+                location.reload();
             };
         }
 
@@ -289,14 +338,9 @@
             document.getElementById('chat-input-container').style.display = (tab === 'chat') ? 'flex' : 'none';
         }
 
-        // --- LÓGICA DE ARRANQUE CRÍTICA ---
         window.onload = () => {
             const sesionPrevia = localStorage.getItem('mc_sesion_activa');
-            
-            // Si el usuario ya se logueó antes, le damos 4 segundos para que Gun recupere la sesión
-            // Si no hay sesión previa, vamos directo al login tras 1.5 segundos
             const tiempoEspera = sesionPrevia ? 4000 : 1500;
-
             setTimeout(() => {
                 if (!appIniciada) {
                     document.getElementById('loading-screen').style.display = 'none';
