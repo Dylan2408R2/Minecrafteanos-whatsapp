@@ -17,7 +17,6 @@
         }
 
         body { 
-            /* Fondo de Pinterest de Minecraft */
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
                         url('https://i.pinimg.com/1200x/b1/61/86/b16186708349ead1e9fa67b03d4062c2.jpg');
             background-size: cover;
@@ -44,20 +43,19 @@
         }
         .mc-btn:hover { background: var(--mc-green); }
 
-        /* --- PANTALLA CARGANDO --- */
+        /* --- CARGANDO --- */
         #loading-screen {
             position: fixed; inset: 0; z-index: 2000; background: #000;
             display: flex; align-items: center; justify-content: center; flex-direction: column;
         }
 
-        /* --- PANTALLA LOGIN --- */
+        /* --- LOGIN --- */
         #auth-screen {
             position: fixed; inset: 0; z-index: 1000;
             display: none; align-items: center; justify-content: center;
         }
         .auth-card { background: rgba(0,0,0,0.85); padding: 30px; border: 4px solid #555; width: 320px; text-align: center; }
         
-        /* --- CABECERA --- */
         header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 4px solid #000; align-items: center; backdrop-filter: blur(5px); }
         
         .pfp-container { width: 42px; height: 42px; border: 3px solid #000; background: #333; cursor: pointer; }
@@ -128,7 +126,6 @@
     </nav>
 
     <div id="tab-news" class="content-area active">
-        <!-- Panel Admin Solo para Dylangamer2345 -->
         <div id="admin-panel" style="display:none; background:rgba(0,0,0,0.6); padding:20px; border:2px dashed var(--mc-green); margin-bottom:30px; max-width:800px; margin: 0 auto 30px auto;">
             <h3 style="margin-top:0">Panel Administrativo</h3>
             <input type="text" id="news-title" placeholder="Título de la noticia...">
@@ -149,21 +146,26 @@
     </div>
 
     <script>
+        // PEERS ESTABLES - No los cambies para no perder sincronía
         const gun = Gun({
-            peers: ['https://gun-manhattan.herokuapp.com/gun', 'https://gundb-relay-ml9v.onrender.com/gun'],
-            localStorage: true
+            peers: [
+                'https://gun-manhattan.herokuapp.com/gun',
+                'https://gundb-relay-ml9v.onrender.com/gun',
+                'https://peer.wall.org/gun'
+            ],
+            localStorage: true // Esto guarda los datos en el navegador del usuario
         });
 
         const user = gun.user().recall({storage: true});
-        const newsDb = gun.get('mc_news_v22');
-        const chatDb = gun.get('mc_chat_v22');
-        const profilesDb = gun.get('mc_profiles_v22');
+
+        // NOMBRES DE NODOS FIJOS (Si cambias estos strings, se resetean los datos)
+        const newsDb = gun.get('minecrafteanos_news_PROD'); 
+        const chatDb = gun.get('minecrafteanos_chat_PROD');
+        const profilesDb = gun.get('minecrafteanos_profiles_PROD');
         
-        // ADMIN CAMBIADO A Dylangamer2345
         const ADMIN_NAME = "Dylangamer2345";
         let appIniciada = false;
 
-        // --- Skins estilo NameMC ---
         const getHead = (name) => `https://mc-heads.net/avatar/${name || 'steve'}`;
 
         gun.on('auth', () => {
@@ -177,7 +179,6 @@
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'none';
             
-            // Verificación de Admin
             if(user.is && user.is.alias === ADMIN_NAME) {
                 document.getElementById('admin-panel').style.display = 'block';
             }
@@ -223,7 +224,7 @@
 
         function loadChat() {
             const box = document.getElementById('chat-messages');
-            chatDb.map().once((data, id) => {
+            chatDb.map().on((data, id) => { // Usamos .on para recibir mensajes en tiempo real
                 if(!data || !data.sender || document.getElementById('msg-'+id)) return;
                 const isMe = data.sender === user.is.alias;
                 const div = document.createElement('div');
@@ -237,21 +238,17 @@
                     </div>
                 `;
                 box.appendChild(div);
-                
-                profilesDb.get(data.sender).once((prof) => {
-                    if(prof && prof.pfp) {
-                        const img = document.getElementById(`pfp-${id}`);
-                        if(img) img.src = prof.pfp;
-                    }
-                });
                 document.getElementById('tab-chat').scrollTop = document.getElementById('tab-chat').scrollHeight;
             });
         }
 
+        // CARGAR NOTICIAS (Ahora persistentes)
         function loadNews() {
             const container = document.getElementById('news-container');
-            newsDb.map().once((data, id) => {
+            // Usamos .on para que si Dylan publica algo, les aparezca a todos sin recargar
+            newsDb.map().on((data, id) => {
                 if(!data || !data.title || document.getElementById('news-'+id)) return;
+                
                 const card = document.createElement('div');
                 card.id = 'news-' + id;
                 card.className = 'news-card';
@@ -262,6 +259,7 @@
                         <p>${data.desc || ''}</p>
                     </div>
                 `;
+                // Se añade arriba del todo (lo más nuevo primero)
                 container.prepend(card);
             });
         }
@@ -270,13 +268,23 @@
             const title = document.getElementById('news-title').value;
             const desc = document.getElementById('news-desc').value;
             const file = document.getElementById('news-file').files[0];
+            
             if(!title || !file) return alert("Falta título o imagen");
+            
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (e) => {
-                newsDb.set({ title, desc, img: e.target.result, time: Date.now() });
-                alert("¡Noticia publicada!");
-                location.reload();
+                // Guardamos en el nodo PROD que es persistente
+                newsDb.set({ 
+                    title: title, 
+                    desc: desc, 
+                    img: e.target.result, 
+                    time: Date.now() 
+                });
+                alert("¡Noticia publicada correctamente!");
+                // Limpiar campos
+                document.getElementById('news-title').value = "";
+                document.getElementById('news-desc').value = "";
             };
         }
 
