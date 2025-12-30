@@ -3,117 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Instantáneo | Minecrafteanos</title>
+    <title>Minecrafteanos | Oficial</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
     <style>
-        :root { --mc-green: #55ff55; --mc-accent: #ffcc00; }
+        :root { --mc-green: #3aa03a; --mc-panel: rgba(30, 30, 30, 0.98); --mc-accent: #ffcc00; }
+        
         body { 
             background: #111 url('https://i.pinimg.com/1200x/b1/61/86/b16186708349ead1e9fa67b03d4062c2.jpg') no-repeat center center fixed;
-            background-size: cover; color: white; font-family: sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column;
+            background-size: cover; color: white; font-family: sans-serif; margin: 0; 
+            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
-        header { background: rgba(0,0,0,0.9); padding: 10px; border-bottom: 4px solid #000; display: flex; justify-content: space-between; align-items: center; }
-        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 5px; background: rgba(0,0,0,0.4); }
-        
-        /* DISEÑO DE MENSAJES OPTIMIZADO */
-        .msg { padding: 8px 12px; max-width: 80%; border-radius: 4px; position: relative; font-size: 15px; line-height: 1.4; margin-bottom: 4px; background: rgba(40,40,40,0.9); border-left: 4px solid var(--mc-green); }
-        .msg.me { align-self: flex-end; border-left: 0; border-right: 4px solid var(--mc-accent); background: rgba(60,60,20,0.9); }
-        .msg b { display: block; font-size: 11px; color: var(--mc-accent); margin-bottom: 2px; }
-        
-        .input-area { padding: 10px; background: #000; display: flex; gap: 8px; border-top: 2px solid #333; }
-        input { flex: 1; padding: 12px; background: #111; color: var(--mc-green); border: 2px solid #444; font-family: monospace; outline: none; }
-        button { background: #555; border: 2px solid #000; border-top-color: #888; color: white; padding: 0 20px; font-family: 'VT323', monospace; font-size: 1.2rem; cursor: pointer; }
-        button:active { transform: translateY(2px); border-top-color: #222; }
 
-        #overlay { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        h1, h2, h3, .mc-font { font-family: 'VT323', monospace; text-transform: uppercase; }
+
+        header { 
+            height: 60px; min-height: 60px; max-height: 60px;
+            background: var(--mc-panel); display: flex; 
+            justify-content: space-between; align-items: center; padding: 0 15px;
+            border-bottom: 4px solid #000; flex-shrink: 0; box-sizing: border-box;
+        }
+
+        .pfp-container { width: 38px; height: 38px; border: 2px solid #000; overflow: hidden; background: #222; display: block; cursor: pointer; }
+        .pfp-container img { width: 100%; height: 100%; image-rendering: pixelated; object-fit: cover; }
+
+        nav { display: flex; background: #222; border-bottom: 2px solid #000; flex-shrink: 0; }
+        nav span { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-family: 'VT323', monospace; font-size: 1.2rem; color: #888; }
+        nav span.active { color: var(--mc-accent); background: #333; border-bottom: 3px solid var(--mc-accent); }
+
+        .content-area { flex: 1; overflow-y: auto; padding: 15px; display: none; padding-bottom: 80px; }
+        .content-area.active { display: block; }
+
+        .msg { background: rgba(0,0,0,0.7); padding: 10px; margin-bottom: 8px; border-left: 4px solid var(--mc-green); display: flex; gap: 10px; border-radius: 4px; word-break: break-all; }
+        .msg.me { border-left: 0; border-right: 4px solid var(--mc-accent); flex-direction: row-reverse; background: rgba(60,60,0,0.4); }
+
+        .mc-btn { background: #555; border: 2px solid #000; border-top-color: #888; border-left-color: #888; color: white; padding: 8px 15px; cursor: pointer; font-family: 'VT323', monospace; font-size: 1.1rem; }
+        .mc-btn:active { border: 2px solid #fff; }
+        input { width: 100%; padding: 10px; margin: 5px 0; background: #000; color: #55ff55; border: 2px solid #555; box-sizing: border-box; }
+
+        #loading-screen { position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        #auth-screen { position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; }
+        .input-chat-fixed { position: fixed; bottom: 0; left: 0; right: 0; padding: 10px; background: #111; display: none; gap: 10px; border-top: 2px solid #000; }
     </style>
 </head>
 <body>
 
-    <div id="overlay">
-        <h1 style="font-family:'VT323'; color:var(--mc-green); font-size: 3rem; margin:0">MINECRAFTEANOS</h1>
-        <input type="text" id="username" placeholder="Tu Nombre/Skin" style="flex:none; width:200px; margin:20px">
-        <button onclick="entrar()" style="height:50px">CONECTAR AL CHAT</button>
+    <div id="loading-screen">
+        <h2 class="mc-font" style="color:var(--mc-green); font-size: 3rem;">CONECTANDO</h2>
+        <p id="load-text" style="color:#444; font-size:10px">Sincronizando chunks v999...</p>
+    </div>
+
+    <div id="auth-screen">
+        <div style="background:#222; padding:30px; border:4px solid #555; width:280px; text-align:center;">
+            <h1 class="mc-font" style="color:var(--mc-green);">MINE-LOGIN</h1>
+            <input type="text" id="user-alias" placeholder="Usuario">
+            <input type="password" id="user-pass" placeholder="Clave">
+            <button class="mc-btn" style="width:100%" onclick="auth('login')">ENTRAR</button>
+            <button class="mc-btn" style="width:100%; margin-top:10px; background:#333; font-size:0.8rem" onclick="auth('register')">REGISTRARSE</button>
+        </div>
     </div>
 
     <header>
-        <span style="font-family:'VT323'; color:var(--mc-green); font-size:1.5rem">CHAT EN VIVO</span>
-        <div id="ping" style="font-size:10px; color:#555">Sincronizando...</div>
+        <div style="display:flex; align-items:center; gap:10px">
+            <strong class="mc-font" style="font-size: 1.4rem; color: var(--mc-green);">MINECRAFTEANOS</strong>
+            <div id="sync-dot" style="width:8px; height:8px; background:red; border-radius:50%"></div>
+        </div>
+        <label class="pfp-container">
+            <img id="my-pfp" src="https://mc-heads.net/avatar/steve">
+            <input type="file" id="pfp-input" hidden accept="image/*" onchange="uploadPFP(this)">
+        </label>
     </header>
 
-    <div id="chat-box"></div>
+    <nav>
+        <span id="nav-news" class="active" onclick="switchTab('news')">NOTICIAS</span>
+        <span id="nav-chat" onclick="switchTab('chat')">CHAT</span>
+    </nav>
 
-    <div class="input-area">
-        <input type="text" id="m-input" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') enviar()">
-        <button onclick="enviar()">ENVIAR</button>
+    <div id="tab-news" class="content-area active">
+        <div id="admin-panel" style="display:none; background:rgba(255,255,255,0.05); padding:15px; border:1px dashed var(--mc-green); margin-bottom:20px;">
+            <input type="text" id="news-title" placeholder="Título">
+            <input type="file" id="news-file" accept="image/*">
+            <button class="mc-btn" onclick="postNews()">PUBLICAR</button>
+        </div>
+        <div id="news-container"></div>
+    </div>
+
+    <div id="tab-chat" class="content-area">
+        <div id="chat-messages"></div>
+    </div>
+
+    <div id="chat-input-container" class="input-chat-fixed">
+        <input type="text" id="chat-input" placeholder="Escribe..." onkeypress="if(event.key==='Enter') sendChat()">
+        <button class="mc-btn" onclick="sendChat()">ENVIAR</button>
     </div>
 
     <script>
-        // TRUCO PARA VELOCIDAD: Solo 2 peers de alta respuesta y desactivar almacenamiento local pesado
+        // PEERS MEJORADOS: Gun necesita varios para no ser lento
         const gun = Gun({
             peers: [
                 'https://gun-manhattan.herokuapp.com/gun',
-                'https://gun-us.herokuapp.com/gun'
+                'https://peer.wall.org/gun',
+                'https://relay.peer.ooo/gun'
             ],
-            localStorage: false // Esto evita que el móvil se trabe leyendo archivos viejos
+            localStorage: true
         });
 
-        const chat = gun.get('mine_fast_chat_99'); // Una sala nueva y limpia
-        let miNombre = "";
+        const user = gun.user().recall({storage: true});
+        
+        // Se mantienen tus nombres de base de datos
+        const newsDb = gun.get('mine_news_v999');
+        const chatDb = gun.get('mine_chat_v999');
+        const profilesDb = gun.get('mine_prof_v999');
+        
+        const ADMIN_NAME = "Dylangamer2345";
+        let appIniciada = false;
 
-        function entrar() {
-            const n = document.getElementById('username').value.trim();
-            if(!n) return alert("Ponte un nombre");
-            miNombre = n;
-            document.getElementById('overlay').style.display = 'none';
-            escuchar();
-        }
+        // Detector de conexión
+        gun.on('hi', () => { 
+            document.getElementById('sync-dot').style.background = '#55ff55'; 
+            document.getElementById('load-text').innerText = "¡Chunks cargados!";
+        });
 
-        function enviar() {
-            const input = document.getElementById('m-input');
-            const texto = input.value.trim();
-            if(!texto) return;
-
-            // Enviamos el mensaje con una "id" basada en el tiempo exacto
-            const id = Date.now();
-            chat.get(id).put({
-                name: miNombre,
-                msg: texto,
-                t: id
+        function startApp() {
+            if (appIniciada) return;
+            if (!user.is) {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('auth-screen').style.display = 'flex';
+                return;
+            }
+            
+            appIniciada = true;
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'none';
+            
+            // Mostrar panel admin si eres tú
+            if(user.is.alias === ADMIN_NAME) document.getElementById('admin-panel').style.display = 'block';
+            
+            // Cargar tu PFP guardada
+            profilesDb.get(user.is.alias).get('pfp').once(img => {
+                if(img) document.getElementById('my-pfp').src = img;
+                else document.getElementById('my-pfp').src = `https://mc-heads.net/avatar/${user.is.alias}`;
             });
 
-            // "Pulsar" la red para despertar a los otros dispositivos
-            gun.get('control').put({ last: id });
+            loadNews();
+            loadChat();
+        }
+
+        // Si ya está logueado al cargar la página
+        if (user.is) startApp();
+
+        // Si tarda demasiado en conectar, mostrar pantalla de auth para no quedar bloqueado
+        setTimeout(() => { if (!appIniciada && !user.is) startApp(); }, 4000);
+
+        gun.on('auth', () => { startApp(); });
+
+        // --- FUNCIONES ORIGINALES RESTAURADAS Y ARREGLADAS ---
+
+        function sendChat() {
+            const input = document.getElementById('chat-input');
+            if(!input.value.trim() || !user.is) return;
+
+            // Enviamos el mensaje
+            chatDb.set({
+                msg: input.value,
+                sender: user.is.alias,
+                time: Date.now()
+            });
 
             input.value = "";
-            input.focus();
         }
 
-        function escuchar() {
-            const box = document.getElementById('chat-box');
-            const vistos = new Set();
-
-            // .map() es el secreto. Escucha cada "celda" de la base de datos
-            chat.map().on((data, id) => {
-                if(!data || !data.msg || vistos.has(id)) return;
-                vistos.add(id);
-
+        function loadChat() {
+            chatDb.map().on((data, id) => {
+                if(!data || !data.sender || document.getElementById('msg-'+id)) return;
+                
+                const isMe = user.is && data.sender === user.is.alias;
                 const div = document.createElement('div');
-                div.className = `msg ${data.name === miNombre ? 'me' : ''}`;
-                div.innerHTML = `<b>${data.name}</b>${data.msg}`;
+                div.className = `msg ${isMe ? 'me' : ''}`;
+                div.id = 'msg-' + id;
                 
-                box.appendChild(div);
-                box.scrollTop = box.scrollHeight;
+                div.innerHTML = `
+                    <img style="width:30px; height:30px; border:1px solid #000" src="https://mc-heads.net/avatar/${data.sender}">
+                    <div style="width:100%"><b style="font-size:11px; color:var(--mc-accent)">${data.sender}</b><div>${data.msg}</div></div>
+                `;
+                document.getElementById('chat-messages').appendChild(div);
                 
-                // Actualizar info de velocidad
-                document.getElementById('ping').innerText = "ONLINE - " + new Date().toLocaleTimeString();
+                // Auto-scroll corregido
+                const chatArea = document.getElementById('tab-chat');
+                chatArea.scrollTop = chatArea.scrollHeight;
             });
         }
 
-        // Heartbeat para que el móvil no "duerma" la conexión
-        setInterval(() => {
-            gun.get('keepalive').put({ time: Date.now() });
-        }, 5000);
+        function loadNews() {
+            newsDb.map().on((data, id) => {
+                if(!data || !data.title || document.getElementById('news-'+id)) return;
+                const card = document.createElement('div');
+                card.id = 'news-' + id;
+                card.style = "background:var(--mc-panel); border:3px solid #000; margin-bottom:15px; overflow:hidden;";
+                card.innerHTML = `
+                    ${data.img ? `<img src="${data.img}" style="width:100%">` : ''}
+                    <div style="padding:10px;"><h3 class="mc-font" style="margin:0">${data.title}</h3></div>
+                `;
+                document.getElementById('news-container').prepend(card);
+            });
+        }
+
+        function postNews() {
+            const title = document.getElementById('news-title').value;
+            const file = document.getElementById('news-file').files[0];
+            if(!title) return alert("Pon un título");
+            
+            if(file) {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    newsDb.set({ title, img: e.target.result, author: user.is.alias, time: Date.now() });
+                    document.getElementById('news-title').value = "";
+                    alert("¡Noticia publicada!");
+                };
+            } else {
+                newsDb.set({ title, author: user.is.alias, time: Date.now() });
+                document.getElementById('news-title').value = "";
+            }
+        }
+
+        function auth(mode) {
+            const alias = document.getElementById('user-alias').value.trim();
+            const pass = document.getElementById('user-pass').value.trim();
+            if(!alias || !pass) return alert("Faltan datos");
+            
+            if(mode === 'register') {
+                user.create(alias, pass, (ack) => { 
+                    if(ack.err) alert(ack.err); 
+                    else alert("¡Registrado! Ahora dale a ENTRAR."); 
+                });
+            } else {
+                user.auth(alias, pass, (ack) => { 
+                    if(ack.err) alert("Clave incorrecta o usuario no existe"); 
+                    else startApp(); 
+                });
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.content-area, nav span').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-'+tab).classList.add('active');
+            document.getElementById('nav-'+tab).classList.add('active');
+            document.getElementById('chat-input-container').style.display = (tab === 'chat') ? 'flex' : 'none';
+        }
+
+        function uploadPFP(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                profilesDb.get(user.is.alias).put({ pfp: e.target.result });
+                document.getElementById('my-pfp').src = e.target.result;
+            };
+        }
     </script>
 </body>
 </html>
