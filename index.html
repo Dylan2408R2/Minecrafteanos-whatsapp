@@ -10,7 +10,6 @@
     <style>
         :root {
             --mc-green: #3aa03a;
-            --mc-dark: #121212;
             --mc-panel: rgba(49, 49, 49, 0.9);
             --mc-text: #ffffff;
             --mc-accent: #ffcc00;
@@ -25,18 +24,6 @@
         }
 
         h1, h2, h3, .mc-font { font-family: 'VT323', monospace; text-transform: uppercase; }
-
-        /* Indicador de Red */
-        #network-status {
-            position: fixed; top: 5px; right: 5px; font-size: 10px; padding: 2px 5px;
-            background: rgba(0,0,0,0.5); border-radius: 3px; z-index: 6000;
-        }
-
-        #noti-banner {
-            display: none; background: rgba(0,0,0,0.9); border: 3px solid var(--mc-accent);
-            padding: 15px; position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
-            z-index: 5000; width: 90%; max-width: 400px; text-align: center;
-        }
 
         .mc-btn {
             background: #555; border: 2px solid #000; border-top-color: #888; border-left-color: #888;
@@ -73,22 +60,15 @@
 </head>
 <body>
 
-    <div id="network-status" style="color: red;">● Desconectado</div>
-
-    <div id="noti-banner">
-        <p class="mc-font" style="margin-bottom:10px;">Activa las notificaciones</p>
-        <button class="mc-btn" onclick="askPermission()">ACTIVAR</button>
-    </div>
-
     <div id="loading-screen">
-        <h2 class="mc-font" style="color:var(--mc-green); font-size: 3rem;">CONECTANDO...</h2>
+        <h2 class="mc-font" style="color:var(--mc-green); font-size: 3rem;">ENTRANDO...</h2>
     </div>
 
     <div id="auth-screen">
         <div class="auth-card">
-            <h1 style="color:var(--mc-green); margin:0 0 20px 0; font-size: 2.5rem;">MINECRAFTEANOS</h1>
-            <input type="text" id="user-alias" placeholder="Usuario">
-            <input type="password" id="user-pass" placeholder="Clave">
+            <h1 class="mc-font" style="color:var(--mc-green); margin:0 0 20px 0; font-size: 2.5rem;">MINECRAFTEANOS</h1>
+            <input type="text" id="user-alias" placeholder="Tu Usuario">
+            <input type="password" id="user-pass" placeholder="Tu Clave">
             <button class="mc-btn" style="width:100%" onclick="auth('login')">ENTRAR</button>
             <button class="mc-btn" style="width:100%; margin-top:10px; font-size:0.9rem; background:#333" onclick="auth('register')">CREAR CUENTA</button>
         </div>
@@ -96,7 +76,7 @@
 
     <header>
         <strong class="mc-font" style="font-size: 1.8rem; color: var(--mc-green);">MINECRAFTEANOS</strong>
-        <div class="user-controls" style="display:flex; align-items:center;">
+        <div class="user-controls">
             <label class="pfp-container">
                 <img id="my-pfp" src="https://mc-heads.net/avatar/steve">
                 <input type="file" id="pfp-input" hidden accept="image/*" onchange="uploadPFP(this)">
@@ -111,7 +91,7 @@
 
     <div id="tab-news" class="content-area active">
         <div id="admin-panel" style="display:none; background:rgba(0,0,0,0.6); padding:10px; border:1px dashed var(--mc-green); margin-bottom:20px;">
-            <input type="text" id="news-title" placeholder="Título">
+            <input type="text" id="news-title" placeholder="Título noticia">
             <input type="file" id="news-file" accept="image/*">
             <button class="mc-btn" onclick="postNews()">PUBLICAR</button>
         </div>
@@ -123,46 +103,27 @@
     </div>
 
     <div id="chat-input-container" class="input-chat-fixed">
-        <input type="text" id="chat-input" placeholder="Mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
+        <input type="text" id="chat-input" placeholder="Escribe aquí..." onkeypress="if(event.key==='Enter') sendChat()">
         <button class="mc-btn" onclick="sendChat()" style="width:100px">ENVIAR</button>
     </div>
 
     <script>
-        // LISTA DE PEERS REFORZADA (5 Servidores)
+        // PEERS FILTRADOS (Los más estables para evitar el cartel de reconexión)
         const gun = Gun({
             peers: [
                 'https://gun-manhattan.herokuapp.com/gun',
-                'https://relay.peer.ooo/gun',
-                'https://gun-us.herokuapp.com/gun',
-                'https://gun-matrix.herokuapp.com/gun',
-                'https://gun-eu.herokuapp.com/gun'
+                'https://relay.peer.ooo/gun'
             ],
-            localStorage: true,
-            retry: 1000
-        });
-
-        // Monitor de conexión
-        gun.on('hi', () => {
-            document.getElementById('network-status').style.color = '#55ff55';
-            document.getElementById('network-status').innerText = '● Conectado';
-        });
-        gun.on('bye', () => {
-            document.getElementById('network-status').style.color = 'red';
-            document.getElementById('network-status').innerText = '● Reconectando...';
+            localStorage: true
         });
 
         const user = gun.user().recall({storage: true});
-        const newsDb = gun.get('mc_noticias_final_v2'); // Versión 2 para limpiar caché
-        const chatDb = gun.get('mc_chat_final_v2');
-        const profilesDb = gun.get('mc_perfiles_final_v2');
+        const newsDb = gun.get('mc_pro_noticias_v3');
+        const chatDb = gun.get('mc_pro_chat_v3');
+        const profilesDb = gun.get('mc_pro_perfiles_v3');
         
         const ADMIN_NAME = "Dylangamer2345";
         let appIniciada = false;
-        const horaDeEntrada = Date.now();
-
-        function askPermission() {
-            Notification.requestPermission().then(perm => { if(perm === 'granted') document.getElementById('noti-banner').style.display = 'none'; });
-        }
 
         gun.on('auth', () => { startApp(); });
 
@@ -171,35 +132,35 @@
             appIniciada = true;
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'none';
-            if (Notification.permission === 'default') document.getElementById('noti-banner').style.display = 'block';
-            if(user.is && user.is.alias === ADMIN_NAME) document.getElementById('admin-panel').style.display = 'block';
+            
+            if(user.is && user.is.alias === ADMIN_NAME) {
+                document.getElementById('admin-panel').style.display = 'block';
+            }
             
             loadNews();
             loadChat();
         }
 
-        // --- SOLUCIÓN AL ENVÍO DEL CELULAR ---
+        // --- MEJORA CRÍTICA DE ENVÍO ---
         function sendChat() {
             const input = document.getElementById('chat-input');
             const txt = input.value.trim();
             if(!txt || !user.is) return;
 
-            // Creamos el objeto del mensaje
-            const msgObj = { msg: txt, sender: user.is.alias, time: Date.now() };
+            const msgId = Date.now().toString();
+            const msgData = { msg: txt, sender: user.is.alias, time: Date.now() };
+
+            // Enviamos el mensaje al nodo principal
+            chatDb.get(msgId).put(msgData);
             
-            // "Empujamos" el mensaje al chat
-            chatDb.set(msgObj);
-            
+            // Forzamos al servidor a reconocer el cambio
+            gun.get('sync_checkpoint').put({ last: msgId });
+
             input.value = "";
-            
-            // Truco extra: Si es celular, forzamos un ping al peer
-            if(/Android|iPhone/i.test(navigator.userAgent)) {
-                console.log("Enviando desde celular, forzando sincronización...");
-                gun.get('network_ping').put({ time: Date.now() });
-            }
         }
 
         function loadChat() {
+            // Usamos .map() pero sobre el nodo para asegurar que lea todo
             chatDb.map().on((data, id) => {
                 if(!data || !data.sender || document.getElementById('msg-'+id)) return;
                 const isMe = user.is && data.sender === user.is.alias;
@@ -215,9 +176,6 @@
         function loadNews() {
             newsDb.map().on((data, id) => {
                 if(!data || !data.title || document.getElementById('news-'+id)) return;
-                if (data.time > horaDeEntrada && data.author !== user.is.alias) {
-                    if (Notification.permission === 'granted') new Notification("NUEVA NOTICIA", {body: data.title});
-                }
                 const card = document.createElement('div');
                 card.id = 'news-' + id;
                 card.className = 'news-card';
@@ -233,15 +191,17 @@
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (e) => {
-                newsDb.set({ title, img: e.target.result, author: user.is.alias, time: Date.now() });
-                alert("¡Publicada!");
+                const id = Date.now().toString();
+                newsDb.get(id).put({ title, img: e.target.result, author: user.is.alias, time: Date.now() });
+                alert("¡Noticia enviada!");
             };
         }
 
         function auth(mode) {
             const alias = document.getElementById('user-alias').value.trim();
             const pass = document.getElementById('user-pass').value.trim();
-            if(mode === 'register') user.create(alias, pass, (ack) => { if(ack.err) alert(ack.err); else alert("¡Listo!"); });
+            if(!alias || !pass) return;
+            if(mode === 'register') user.create(alias, pass, (ack) => { if(ack.err) alert(ack.err); else alert("Cuenta creada"); });
             else user.auth(alias, pass, (ack) => { if(ack.err) alert("Error"); else startApp(); });
         }
 
@@ -252,8 +212,19 @@
             document.getElementById('chat-input-container').style.display = (tab === 'chat') ? 'flex' : 'none';
         }
 
+        function uploadPFP(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                profilesDb.get(user.is.alias).put({ pfp: e.target.result });
+                document.getElementById('my-pfp').src = e.target.result;
+            };
+        }
+
         window.onload = () => {
-            setTimeout(() => { if (!appIniciada) { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex'; } }, 4000);
+            setTimeout(() => { if (!appIniciada) { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex'; } }, 3000);
         };
     </script>
 </body>
