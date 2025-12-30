@@ -26,61 +26,61 @@
         h1, h2, h3, .mc-font { font-family: 'VT323', monospace; text-transform: uppercase; }
 
         header { 
-            height: 65px; background: var(--mc-panel); padding: 0 20px; 
+            height: 65px; background: var(--mc-panel); padding: 0 15px; 
             display: flex; justify-content: space-between; border-bottom: 4px solid #000; 
-            align-items: center; box-sizing: border-box; flex-shrink: 0;
+            align-items: center; flex-shrink: 0;
         }
 
-        .pfp-container { display: block; width: 42px; height: 42px; border: 3px solid #000; background: #333; overflow: hidden; cursor: pointer; }
+        .pfp-container { width: 40px; height: 40px; border: 2px solid #000; background: #333; overflow: hidden; }
         .pfp-container img { width: 100%; height: 100%; image-rendering: pixelated; object-fit: cover; }
 
         .mc-btn {
             background: #555; border: 2px solid #000; border-top-color: #888; border-left-color: #888;
-            color: white; padding: 10px; cursor: pointer; font-family: 'VT323', monospace;
-            font-size: 1.2rem; text-shadow: 2px 2px #000;
+            color: white; padding: 8px; cursor: pointer; font-family: 'VT323', monospace;
+            font-size: 1rem; text-shadow: 1px 1px #000;
         }
-        .mc-btn:hover { background: var(--mc-green); }
+        .mc-btn:active { border: 2px solid #fff; }
 
         #loading-screen { position: fixed; inset: 0; z-index: 2000; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         #auth-screen { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; }
-        .auth-card { background: rgba(0,0,0,0.85); padding: 30px; border: 4px solid #555; width: 320px; text-align: center; }
+        .auth-card { background: rgba(0,0,0,0.85); padding: 25px; border: 4px solid #555; width: 280px; text-align: center; }
         
         nav { display: flex; background: rgba(34, 34, 34, 0.9); border-bottom: 2px solid #000; }
-        nav span { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-family: 'VT323', monospace; font-size: 1.3rem; color: #aaa; }
+        nav span { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-family: 'VT323', monospace; font-size: 1.2rem; color: #aaa; }
         nav span.active { color: var(--mc-accent); background: rgba(255,255,255,0.1); border-bottom: 3px solid var(--mc-accent); }
 
-        .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; padding-bottom: 100px; }
+        .content-area { flex: 1; overflow-y: auto; padding: 15px; display: none; padding-bottom: 80px; }
         .content-area.active { display: block; }
 
-        .news-card { background: var(--mc-panel); margin: 0 auto 25px auto; border: 3px solid #000; max-width: 800px; }
-        .news-card img { width: 100%; border-bottom: 3px solid #000; display: block; }
+        .msg { background: rgba(0,0,0,0.5); padding: 8px; display: flex; gap: 10px; border-left: 4px solid #555; margin-bottom: 5px; }
+        .msg.me { border-left: 0; border-right: 4px solid var(--mc-accent); flex-direction: row-reverse; }
 
-        #chat-messages { display: flex; flex-direction: column; gap: 8px; max-width: 900px; margin: 0 auto; }
-        .msg { background: rgba(0,0,0,0.4); padding: 10px; display: flex; gap: 12px; border-left: 4px solid #555; }
-        .msg.me { border-left: 0; border-right: 4px solid var(--mc-accent); background: rgba(255,204,0,0.1); }
-        
-        input { width: 100%; padding: 12px; margin: 8px 0; background: rgba(0,0,0,0.7); color: #55ff55; border: 2px solid #555; box-sizing: border-box; }
-        .input-chat-fixed { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; background: rgba(34,34,34,0.95); display: none; gap: 10px; border-top: 3px solid #000; }
+        input { width: 100%; padding: 10px; margin: 5px 0; background: #000; color: #55ff55; border: 2px solid #555; box-sizing: border-box; }
+        .input-chat-fixed { position: fixed; bottom: 0; left: 0; right: 0; padding: 10px; background: #222; display: none; gap: 8px; border-top: 2px solid #000; }
     </style>
 </head>
 <body>
 
     <div id="loading-screen">
-        <h2 class="mc-font" style="color:var(--mc-green); font-size: 3rem;">CARGANDO...</h2>
+        <h2 class="mc-font" style="color:var(--mc-green); font-size: 2.5rem;">CONECTANDO</h2>
+        <button class="mc-btn" onclick="location.reload()" style="margin-top:20px">FORZAR RECARGA</button>
     </div>
 
     <div id="auth-screen">
         <div class="auth-card">
-            <h1 class="mc-font" style="color:var(--mc-green); margin:0 0 20px 0;">MINECRAFTEANOS</h1>
+            <h1 class="mc-font" style="color:var(--mc-green);">IDENTIFÍCATE</h1>
             <input type="text" id="user-alias" placeholder="Usuario">
             <input type="password" id="user-pass" placeholder="Clave">
             <button class="mc-btn" style="width:100%" onclick="auth('login')">ENTRAR</button>
-            <button class="mc-btn" style="width:100%; margin-top:10px; font-size:0.8rem; background:#333" onclick="auth('register')">CREAR CUENTA</button>
+            <button class="mc-btn" style="width:100%; margin-top:10px; background:#333" onclick="auth('register')">CREAR CUENTA</button>
         </div>
     </div>
 
     <header>
-        <strong class="mc-font" style="font-size: 1.5rem; color: var(--mc-green);">MINECRAFTEANOS</strong>
+        <div style="display:flex; align-items:center; gap:10px">
+            <strong class="mc-font" style="color: var(--mc-green);">MINECRAFTEANOS</strong>
+            <button onclick="syncAll()" style="background:none; border:1px solid #444; color:#666; font-size:8px; cursor:pointer">SYNC</button>
+        </div>
         <label class="pfp-container">
             <img id="my-pfp" src="https://mc-heads.net/avatar/steve">
             <input type="file" id="pfp-input" hidden accept="image/*" onchange="uploadPFP(this)">
@@ -93,7 +93,7 @@
     </nav>
 
     <div id="tab-news" class="content-area active">
-        <div id="admin-panel" style="display:none; background:rgba(0,0,0,0.5); padding:15px; border:1px dashed var(--mc-green); margin-bottom:20px;">
+        <div id="admin-panel" style="display:none; background:rgba(0,0,0,0.5); padding:10px; border:1px dashed var(--mc-green); margin-bottom:15px;">
             <input type="text" id="news-title" placeholder="Título">
             <input type="file" id="news-file" accept="image/*">
             <button class="mc-btn" onclick="postNews()">PUBLICAR</button>
@@ -106,30 +106,37 @@
     </div>
 
     <div id="chat-input-container" class="input-chat-fixed">
-        <input type="text" id="chat-input" placeholder="Mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
-        <button class="mc-btn" onclick="sendChat()" style="width:100px">ENVIAR</button>
+        <input type="text" id="chat-input" placeholder="Escribir..." onkeypress="if(event.key==='Enter') sendChat()">
+        <button class="mc-btn" onclick="sendChat()" style="width:80px">ENVIAR</button>
     </div>
 
     <script>
-        // PEERS ULTRA ESTABLES
+        // PEERS SELECCIONADOS POR ESTABILIDAD EN 2025
         const gun = Gun({
             peers: [
-                'https://gun-manhattan.herokuapp.com/gun',
                 'https://relay.peer.ooo/gun',
-                'https://gundb-relay-ml9v.onrender.com/gun'
+                'https://gun-us.herokuapp.com/gun',
+                'https://gun-matrix.herokuapp.com/gun'
             ],
             localStorage: true
         });
 
         const user = gun.user().recall({storage: true});
         
-        // Versión V4 para forzar limpieza de errores anteriores
-        const newsDb = gun.get('mc_global_news_v4');
-        const chatDb = gun.get('mc_global_chat_v4');
-        const profilesDb = gun.get('mc_global_profiles_v4');
+        // Nueva versión de datos para forzar limpieza
+        const newsDb = gun.get('mine_news_v100');
+        const chatDb = gun.get('mine_chat_v100');
+        const profilesDb = gun.get('mine_prof_v100');
         
         const ADMIN_NAME = "Dylangamer2345";
         let appIniciada = false;
+
+        // --- SISTEMA DE SINCRONIZACIÓN FORZADA ---
+        function syncAll() {
+            console.log("Forzando sincronización...");
+            gun.get('ping').put({ time: Date.now() });
+            location.reload();
+        }
 
         gun.on('auth', () => { startApp(); });
 
@@ -140,32 +147,31 @@
             document.getElementById('auth-screen').style.display = 'none';
             if(user.is && user.is.alias === ADMIN_NAME) document.getElementById('admin-panel').style.display = 'block';
             
-            // Cargar skin
             profilesDb.get(user.is.alias).once(d => {
                 document.getElementById('my-pfp').src = (d && d.pfp) ? d.pfp : `https://mc-heads.net/avatar/${user.is.alias}`;
             });
 
             loadNews();
             loadChat();
-
-            // MANTENER CONEXIÓN VIVA (PULSO)
-            setInterval(() => {
-                gun.get('keepalive').put({ time: Date.now() });
-            }, 15000);
         }
 
-        // --- CHAT CORREGIDO CON .SET() ---
         function sendChat() {
             const input = document.getElementById('chat-input');
             const txt = input.value.trim();
             if(!txt || !user.is) return;
 
-            // .set() es la clave para que el flujo sea infinito y no se bloquee
-            chatDb.set({
+            const msgData = {
                 msg: txt,
                 sender: user.is.alias,
-                time: Date.now()
-            });
+                time: Date.now(),
+                _id: Math.random().toString(36).substr(2, 9) // ID único para evitar colisiones
+            };
+
+            // Publicamos el mensaje
+            chatDb.set(msgData);
+            
+            // "Grito" de respaldo para asegurar que el celular sea escuchado
+            gun.get('last_msg').put(msgData);
 
             input.value = "";
         }
@@ -177,7 +183,7 @@
                 const div = document.createElement('div');
                 div.className = `msg ${isMe ? 'me' : ''}`;
                 div.id = 'msg-' + id;
-                div.innerHTML = `<img style="width:32px; height:32px;" src="https://mc-heads.net/avatar/${data.sender}"><div><b>${data.sender}</b><div>${data.msg}</div></div>`;
+                div.innerHTML = `<img style="width:30px; height:30px;" src="https://mc-heads.net/avatar/${data.sender}"><div><b style="font-size:12px; color:var(--mc-accent)">${data.sender}</b><div style="font-size:14px">${data.msg}</div></div>`;
                 document.getElementById('chat-messages').appendChild(div);
                 document.getElementById('tab-chat').scrollTop = document.getElementById('tab-chat').scrollHeight;
             });
@@ -188,8 +194,8 @@
                 if(!data || !data.title || document.getElementById('news-'+id)) return;
                 const card = document.createElement('div');
                 card.id = 'news-' + id;
-                card.className = 'news-card';
-                card.innerHTML = `<img src="${data.img}"><div style="padding:15px;"><h3 style="margin:0; color:var(--mc-accent)">${data.title}</h3></div>`;
+                card.style = "background:var(--mc-panel); border:2px solid #000; margin-bottom:15px; overflow:hidden;";
+                card.innerHTML = `<img src="${data.img}" style="width:100%"><div style="padding:10px;"><h3 style="margin:0; color:var(--mc-accent)">${data.title}</h3></div>`;
                 document.getElementById('news-container').prepend(card);
             });
         }
@@ -211,8 +217,8 @@
             const alias = document.getElementById('user-alias').value.trim();
             const pass = document.getElementById('user-pass').value.trim();
             if(!alias || !pass) return alert("Faltan datos");
-            if(mode === 'register') user.create(alias, pass, (ack) => { if(ack.err) alert(ack.err); else alert("Creada!"); });
-            else user.auth(alias, pass, (ack) => { if(ack.err) alert("Error"); else startApp(); });
+            if(mode === 'register') user.create(alias, pass, (ack) => { if(ack.err) alert(ack.err); else alert("¡Cuenta creada!"); });
+            else user.auth(alias, pass, (ack) => { if(ack.err) alert("Error de clave"); else startApp(); });
         }
 
         function switchTab(tab) {
@@ -234,7 +240,8 @@
         }
 
         window.onload = () => {
-            setTimeout(() => { if (!appIniciada) { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex'; } }, 3500);
+            // Si en 6 segundos no entra, mostrar login (por si fallan los peers)
+            setTimeout(() => { if (!appIniciada) { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex'; } }, 6000);
         };
     </script>
 </body>
