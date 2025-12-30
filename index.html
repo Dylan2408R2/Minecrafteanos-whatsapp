@@ -8,41 +8,41 @@
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
     <style>
-        :root { --mc-green: #3aa03a; --mc-panel: rgba(30, 30, 30, 0.98); --mc-accent: #ffcc00; }
+        :root { --mc-green: #3aa03a; --mc-panel: rgba(20, 20, 20, 0.95); --mc-accent: #ffcc00; }
         
         body { 
-            /* RESTAURADO TU FONDO ORIGINAL */
             background: #111 url('https://i.pinimg.com/1200x/b1/61/86/b16186708349ead1e9fa67b03d4062c2.jpg') no-repeat center center fixed;
             background-size: cover; color: white; font-family: sans-serif; margin: 0; 
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
-        h1, h2, h3, .mc-font { font-family: 'VT323', monospace; text-transform: uppercase; }
+        h1, h2, h3, .mc-font { font-family: 'VT323', monospace; text-transform: uppercase; margin: 0; }
 
         header { 
             height: 60px; background: var(--mc-panel); display: flex; 
             justify-content: space-between; align-items: center; padding: 0 15px;
-            border-bottom: 4px solid #000; flex-shrink: 0; box-sizing: border-box;
+            border-bottom: 4px solid #000; flex-shrink: 0; z-index: 10;
         }
 
-        .pfp-container { width: 38px; height: 38px; border: 2px solid #000; overflow: hidden; background: #222; cursor: pointer; }
-        .pfp-container img { width: 100%; height: 100%; image-rendering: pixelated; object-fit: cover; }
+        .pfp-container { width: 42px; height: 42px; border: 2px solid #000; background: #333; cursor: pointer; position: relative; }
+        .pfp-container img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
 
-        nav { display: flex; background: #222; border-bottom: 2px solid #000; flex-shrink: 0; }
-        nav span { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-family: 'VT323', monospace; font-size: 1.2rem; color: #888; }
+        nav { display: flex; background: #222; border-bottom: 2px solid #000; }
+        nav span { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-family: 'VT323', monospace; font-size: 1.3rem; color: #888; }
         nav span.active { color: var(--mc-accent); background: #333; border-bottom: 3px solid var(--mc-accent); }
 
-        .content-area { flex: 1; overflow-y: auto; padding: 15px; display: none; padding-bottom: 80px; }
+        .content-area { flex: 1; overflow-y: auto; padding: 15px; display: none; padding-bottom: 90px; }
         .content-area.active { display: block; }
 
-        /* CHAT CORREGIDO */
-        .msg { background: rgba(0,0,0,0.8); padding: 10px; margin-bottom: 8px; border-left: 4px solid var(--mc-green); display: flex; gap: 10px; border-radius: 4px; word-break: break-word; }
-        .msg.me { border-left: 0; border-right: 4px solid var(--mc-accent); flex-direction: row-reverse; background: rgba(60,60,0,0.6); }
+        /* CHAT ESTILO MINECRAFT */
+        .msg { background: rgba(0,0,0,0.8); padding: 10px; margin-bottom: 8px; border-left: 4px solid var(--mc-green); display: flex; gap: 12px; border-radius: 2px; }
+        .msg.me { border-left: 0; border-right: 4px solid var(--mc-accent); flex-direction: row-reverse; background: rgba(50,50,0,0.6); }
+        .msg img { width: 35px; height: 35px; border: 1px solid #555; flex-shrink: 0; }
 
         .mc-btn { background: #555; border: 2px solid #000; border-top-color: #888; border-left-color: #888; color: white; padding: 8px 15px; cursor: pointer; font-family: 'VT323', monospace; font-size: 1.1rem; }
-        .mc-btn:active { border: 2px solid #fff; }
+        .mc-btn:active { border: 2px solid #fff; transform: translateY(1px); }
         
-        input { width: 100%; padding: 10px; margin: 5px 0; background: #000; color: #55ff55; border: 2px solid #555; box-sizing: border-box; }
+        input { width: 100%; padding: 12px; background: #000; color: #55ff55; border: 2px solid #555; box-sizing: border-box; font-family: monospace; outline: none; }
 
         #loading-screen { position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         #auth-screen { position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; }
@@ -52,41 +52,42 @@
 <body>
 
     <div id="loading-screen">
-        <h2 class="mc-font" style="color:var(--mc-green); font-size: 3rem;">CONECTANDO</h2>
-        <p style="color:#444; font-size:10px">Iniciando protocolo v999</p>
+        <h2 class="mc-font" style="color:var(--mc-green); font-size: 3rem;">CONECTANDO...</h2>
+        <div id="net-status" style="color:#444; font-family: monospace; font-size: 12px; margin-top: 10px;">Sincronizando chunks...</div>
     </div>
 
     <div id="auth-screen">
         <div style="background:#222; padding:30px; border:4px solid #555; width:280px; text-align:center;">
-            <h1 class="mc-font" style="color:var(--mc-green);">MINE-LOGIN</h1>
+            <h1 class="mc-font" style="color:var(--mc-green); margin-bottom: 15px;">MINE-LOGIN</h1>
             <input type="text" id="user-alias" placeholder="Usuario">
-            <input type="password" id="user-pass" placeholder="Clave">
-            <button class="mc-btn" style="width:100%" onclick="auth('login')">ENTRAR</button>
-            <button class="mc-btn" style="width:100%; margin-top:10px; background:#333; font-size:0.8rem" onclick="auth('register')">REGISTRARSE</button>
+            <input type="password" id="user-pass" placeholder="Contraseña">
+            <button class="mc-btn" style="width:100%; margin-top:15px;" onclick="auth('login')">ENTRAR</button>
+            <button class="mc-btn" style="width:100%; margin-top:10px; background:#333; font-size:0.8rem" onclick="auth('register')">CREAR CUENTA</button>
         </div>
     </div>
 
     <header>
         <div style="display:flex; align-items:center; gap:10px">
-            <strong class="mc-font" style="font-size: 1.4rem; color: var(--mc-green);">MINECRAFTEANOS</strong>
-            <div id="sync-dot" style="width:8px; height:8px; background:red; border-radius:50%"></div>
+            <strong class="mc-font" style="font-size: 1.5rem; color: var(--mc-green);">MINECRAFTEANOS</strong>
+            <div id="sync-dot" style="width:10px; height:10px; background:red; border-radius:50%; border:1px solid #000;"></div>
         </div>
-        <label class="pfp-container">
+        <label class="pfp-container" title="Cambiar Skin">
             <img id="my-pfp" src="https://mc-heads.net/avatar/steve">
-            <input type="file" id="pfp-input" hidden accept="image/*" onchange="uploadPFP(this)">
+            <input type="file" id="pfp-input" hidden accept="image/*" onchange="updateSkin(this)">
         </label>
     </header>
 
     <nav>
         <span id="nav-news" class="active" onclick="switchTab('news')">NOTICIAS</span>
-        <span id="nav-chat" onclick="switchTab('chat')">CHAT</span>
+        <span id="nav-chat" onclick="switchTab('chat')">CHAT GLOBAL</span>
     </nav>
 
     <div id="tab-news" class="content-area active">
-        <div id="admin-panel" style="display:none; background:rgba(255,255,255,0.05); padding:15px; border:1px dashed var(--mc-green); margin-bottom:20px;">
-            <input type="text" id="news-title" placeholder="Título">
-            <input type="file" id="news-file" accept="image/*">
-            <button class="mc-btn" onclick="postNews()">PUBLICAR</button>
+        <div id="admin-panel" style="display:none; background:rgba(255,255,255,0.05); padding:15px; border:2px dashed var(--mc-green); margin-bottom:20px;">
+            <h3 class="mc-font" style="color:var(--mc-green); margin-bottom:10px;">Panel Admin</h3>
+            <input type="text" id="news-title" placeholder="Título de la noticia">
+            <input type="file" id="news-file" accept="image/*" style="margin-top:10px; font-size:12px;">
+            <button class="mc-btn" style="width:100%; margin-top:10px;" onclick="postNews()">PUBLICAR</button>
         </div>
         <div id="news-container"></div>
     </div>
@@ -96,43 +97,47 @@
     </div>
 
     <div id="chat-input-container" class="input-chat-fixed">
-        <input type="text" id="chat-input" placeholder="Escribe..." onkeypress="if(event.key==='Enter') sendChat()">
+        <input type="text" id="chat-input" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
         <button class="mc-btn" onclick="sendChat()">ENVIAR</button>
     </div>
 
     <script>
-        // PEERS SELECCIONADOS POR ESTABILIDAD
+        // PEERS ACTUALIZADOS PARA MÁXIMA SINCRONIZACIÓN
         const gun = Gun({
             peers: [
                 'https://gun-manhattan.herokuapp.com/gun',
-                'https://peer.wall.org/gun'
+                'https://peer.wall.org/gun',
+                'https://relay.peer.ooo/gun'
             ]
         });
 
         const user = gun.user().recall({storage: true});
         
-        // Volvemos a las bases de datos originales v999
-        const newsDb = gun.get('mine_news_v999');
-        const chatDb = gun.get('mine_chat_v999');
-        const profilesDb = gun.get('mine_prof_v999');
+        // BD Unificada
+        const chatDb = gun.get('mine_chat_final_v1');
+        const newsDb = gun.get('mine_news_final_v1');
+        const profilesDb = gun.get('mine_skins_final_v1');
         
         const ADMIN_NAME = "Dylangamer2345";
-        let appIniciada = false;
+        let appReady = false;
 
-        // Detector de conexión
-        gun.on('hi', () => { document.getElementById('sync-dot').style.background = '#55ff55'; });
+        // Detector de Red
+        gun.on('hi', () => { 
+            document.getElementById('sync-dot').style.background = '#55ff55'; 
+            document.getElementById('net-status').innerText = "¡Chunks cargados! Entrando...";
+        });
 
         function startApp() {
-            if (appIniciada) return;
-            appIniciada = true;
+            if (appReady) return;
+            appReady = true;
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'none';
             
             if(user.is && user.is.alias === ADMIN_NAME) document.getElementById('admin-panel').style.display = 'block';
             
-            // Cargar mi PFP
-            profilesDb.get(user.is.alias).get('pfp').once(img => {
-                if(img) document.getElementById('my-pfp').src = img;
+            // Cargar mi Skin guardada
+            profilesDb.get(user.is.alias).get('skin').on(data => {
+                if(data) document.getElementById('my-pfp').src = data;
                 else document.getElementById('my-pfp').src = `https://mc-heads.net/avatar/${user.is.alias}`;
             });
 
@@ -140,76 +145,70 @@
             loadChat();
         }
 
-        // Si ya está logueado al entrar
-        if (user.is) {
-            startApp();
-        } else {
-            // Si en 3 segundos no hay sesión, mostramos el login
-            setTimeout(() => { if (!appIniciada) {
-                document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('auth-screen').style.display = 'flex';
-            }}, 3000);
-        }
+        // Auto-login
+        if (user.is) startApp();
+        else setTimeout(() => { if (!appReady) { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex'; } }, 3000);
 
-        // Escuchar cuando el usuario se autentica
-        gun.on('auth', () => { startApp(); });
+        gun.on('auth', () => startApp());
 
-        // --- FUNCIONAMIENTO DEL CHAT ---
+        // --- CHAT ---
         function sendChat() {
             const input = document.getElementById('chat-input');
-            const texto = input.value.trim();
-            if(!texto || !user.is) return;
+            if(!input.value.trim() || !user.is) return;
 
-            // Guardamos en la base de datos
-            chatDb.set({
-                msg: texto,
-                sender: user.is.alias,
-                time: Date.now()
+            // Obtener mi skin actual para el mensaje
+            profilesDb.get(user.is.alias).get('skin').once(mySkin => {
+                chatDb.set({
+                    msg: input.value,
+                    sender: user.is.alias,
+                    skin: mySkin || `https://mc-heads.net/avatar/${user.is.alias}`,
+                    time: Date.now()
+                });
+                input.value = "";
             });
-
-            input.value = "";
         }
 
         function loadChat() {
-            // Usamos .on() para recibir mensajes en tiempo real
             chatDb.map().on((data, id) => {
                 if(!data || !data.msg || document.getElementById('msg-'+id)) return;
-                
                 const isMe = user.is && data.sender === user.is.alias;
                 const div = document.createElement('div');
                 div.className = `msg ${isMe ? 'me' : ''}`;
                 div.id = 'msg-' + id;
-                
                 div.innerHTML = `
-                    <img style="width:30px; height:30px;" src="https://mc-heads.net/avatar/${data.sender}">
+                    <img src="${data.skin || 'https://mc-heads.net/avatar/steve'}" onerror="this.src='https://mc-heads.net/avatar/steve'">
                     <div style="width:100%">
-                        <b style="font-size:11px; color:var(--mc-accent)">${data.sender}</b>
-                        <div>${data.msg}</div>
+                        <b style="font-size:13px; color:var(--mc-accent)">${data.sender}</b>
+                        <div style="margin-top:2px; line-height:1.4">${data.msg}</div>
                     </div>
                 `;
-                
-                const container = document.getElementById('chat-messages');
-                container.appendChild(div);
-                
-                // Auto-scroll al fondo
-                const tabChat = document.getElementById('tab-chat');
-                tabChat.scrollTop = tabChat.scrollHeight;
+                document.getElementById('chat-messages').appendChild(div);
+                document.getElementById('tab-chat').scrollTop = document.getElementById('tab-chat').scrollHeight;
             });
         }
 
-        // --- NOTICIAS ---
+        // --- SKINS ---
+        function updateSkin(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const imgData = e.target.result;
+                profilesDb.get(user.is.alias).put({ skin: imgData });
+                document.getElementById('my-pfp').src = imgData;
+                alert("¡Skin actualizada! Tus próximos mensajes tendrán esta cara.");
+            };
+        }
+
+        // --- NOTICIAS Y AUTH ---
         function loadNews() {
             newsDb.map().on((data, id) => {
                 if(!data || !data.title || document.getElementById('news-'+id)) return;
                 const card = document.createElement('div');
                 card.id = 'news-' + id;
-                card.style = "background:var(--mc-panel); border:3px solid #000; margin-bottom:15px; overflow:hidden;";
-                card.innerHTML = `
-                    ${data.img ? `<img src="${data.img}" style="width:100%">` : ''}
-                    <div style="padding:10px;">
-                        <h3 class="mc-font" style="margin:0">${data.title}</h3>
-                        <small style="color:gray">Subido por ${data.author || 'Admin'}</small>
-                    </div>`;
+                card.style = "background:var(--mc-panel); border:3px solid #000; margin-bottom:20px; overflow:hidden;";
+                card.innerHTML = `${data.img ? `<img src="${data.img}" style="width:100%">` : ''}<div style="padding:15px;"><h3 class="mc-font" style="color:var(--mc-accent)">${data.title}</h3><small style="color:#777">Por ${data.author}</small></div>`;
                 document.getElementById('news-container').prepend(card);
             });
         }
@@ -218,37 +217,20 @@
             const title = document.getElementById('news-title').value;
             const file = document.getElementById('news-file').files[0];
             if(!title) return;
-
-            if(file) {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (e) => {
-                    newsDb.set({ title, img: e.target.result, author: user.is.alias, time: Date.now() });
-                    document.getElementById('news-title').value = "";
-                };
-            } else {
-                newsDb.set({ title, author: user.is.alias, time: Date.now() });
+            const finish = (img) => {
+                newsDb.set({ title, img: img || null, author: user.is.alias, time: Date.now() });
                 document.getElementById('news-title').value = "";
-            }
+                alert("Noticia publicada");
+            };
+            if(file){ const r = new FileReader(); r.readAsDataURL(file); r.onload = (e) => finish(e.target.result); }
+            else finish();
         }
 
-        // --- SISTEMA DE LOGIN ---
         function auth(mode) {
-            const alias = document.getElementById('user-alias').value.trim();
-            const pass = document.getElementById('user-pass').value.trim();
-            if(!alias || !pass) return alert("Faltan datos");
-
-            if(mode === 'register') {
-                user.create(alias, pass, (ack) => {
-                    if(ack.err) alert(ack.err);
-                    else alert("¡Registrado! Ahora haz clic en ENTRAR");
-                });
-            } else {
-                user.auth(alias, pass, (ack) => {
-                    if(ack.err) alert("Usuario o clave incorrecta");
-                    // El evento gun.on('auth') disparará startApp()
-                });
-            }
+            const a = document.getElementById('user-alias').value;
+            const p = document.getElementById('user-pass').value;
+            if(mode === 'register') user.create(a, p, (ack) => ack.err ? alert(ack.err) : alert("Registrado. Pulsa Entrar."));
+            else user.auth(a, p, (ack) => ack.err ? alert("Error de login") : startApp());
         }
 
         function switchTab(tab) {
@@ -256,17 +238,6 @@
             document.getElementById('tab-'+tab).classList.add('active');
             document.getElementById('nav-'+tab).classList.add('active');
             document.getElementById('chat-input-container').style.display = (tab === 'chat') ? 'flex' : 'none';
-        }
-
-        function uploadPFP(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                profilesDb.get(user.is.alias).put({ pfp: e.target.result });
-                document.getElementById('my-pfp').src = e.target.result;
-            };
         }
     </script>
 </body>
