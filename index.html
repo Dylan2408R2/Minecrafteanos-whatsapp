@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minecrafteanos | Oficial</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <!-- Scripts actualizados -->
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
     <style>
@@ -19,82 +20,60 @@
         body { 
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
                         url('https://i.pinimg.com/1200x/b1/61/86/b16186708349ead1e9fa67b03d4062c2.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: var(--mc-text); 
-            font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; 
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: var(--mc-text); font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; 
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
         h1, h2, h3, .mc-font { font-family: 'VT323', monospace; text-transform: uppercase; }
 
+        /* Indicador de conexión */
+        #status-dot { width: 10px; height: 10px; background: red; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .online { background: #55ff55 !important; box-shadow: 0 0 8px #55ff55; }
+
         .mc-btn {
-            background: #555;
-            border: 2px solid #000;
-            border-top-color: #888;
-            border-left-color: #888;
-            color: white;
-            padding: 10px;
-            cursor: pointer;
-            font-family: 'VT323', monospace;
-            font-size: 1.2rem;
-            text-shadow: 2px 2px #000;
+            background: #555; border: 2px solid #000; border-top-color: #888; border-left-color: #888;
+            color: white; padding: 10px; cursor: pointer; font-family: 'VT323', monospace;
+            font-size: 1.2rem; text-shadow: 2px 2px #000;
         }
         .mc-btn:hover { background: var(--mc-green); }
 
-        /* --- CARGANDO --- */
-        #loading-screen {
-            position: fixed; inset: 0; z-index: 2000; background: #000;
-            display: flex; align-items: center; justify-content: center; flex-direction: column;
-        }
-
-        /* --- LOGIN --- */
-        #auth-screen {
-            position: fixed; inset: 0; z-index: 1000;
-            display: none; align-items: center; justify-content: center;
-        }
+        #loading-screen { position: fixed; inset: 0; z-index: 2000; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        #auth-screen { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; }
         .auth-card { background: rgba(0,0,0,0.85); padding: 30px; border: 4px solid #555; width: 320px; text-align: center; }
         
         header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 4px solid #000; align-items: center; backdrop-filter: blur(5px); }
-        
-        .pfp-container { width: 42px; height: 42px; border: 3px solid #000; background: #333; cursor: pointer; }
-        .pfp-container img { width: 100%; height: 100%; image-rendering: pixelated; }
+        .pfp-container { width: 42px; height: 42px; border: 3px solid #000; background: #333; cursor: pointer; overflow: hidden; }
+        .pfp-container img { width: 100%; height: 100%; image-rendering: pixelated; object-fit: cover; }
         
         nav { display: flex; background: rgba(34, 34, 34, 0.9); border-bottom: 2px solid #000; }
         nav span { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-family: 'VT323', monospace; font-size: 1.3rem; color: #aaa; }
         nav span.active { color: var(--mc-accent); background: rgba(255,255,255,0.1); border-bottom: 3px solid var(--mc-accent); }
 
-        .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; }
+        .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; padding-bottom: 100px; }
         .content-area.active { display: block; }
 
-        /* --- NOTICIAS --- */
-        .news-card { background: var(--mc-panel); margin: 0 auto 25px auto; border: 3px solid #000; max-width: 800px; box-shadow: 5px 5px 0px rgba(0,0,0,0.5); }
-        .news-card img { width: 100%; border-bottom: 3px solid #000; display: block; }
+        .news-card { background: var(--mc-panel); margin: 0 auto 25px auto; border: 3px solid #000; max-width: 800px; }
+        .news-card img { width: 100%; border-bottom: 3px solid #000; display: block; max-height: 400px; object-fit: cover; }
         .news-card-content { padding: 15px; }
 
-        /* --- CHAT --- */
         #chat-messages { display: flex; flex-direction: column; gap: 8px; max-width: 900px; margin: 0 auto; }
-        .msg { background: rgba(0,0,0,0.4); padding: 10px; display: flex; gap: 12px; border-left: 4px solid #555; border-radius: 0 5px 5px 0; }
-        .msg.me { border-left: 0; border-right: 4px solid var(--mc-accent); background: rgba(255,204,0,0.1); border-radius: 5px 0 0 5px; }
-        .chat-pfp { width: 32px; height: 32px; border: 2px solid #000; image-rendering: pixelated; background: #222; }
+        .msg { background: rgba(0,0,0,0.4); padding: 10px; display: flex; gap: 12px; border-left: 4px solid #555; }
+        .msg.me { border-left: 0; border-right: 4px solid var(--mc-accent); background: rgba(255,204,0,0.1); }
+        .chat-pfp { width: 32px; height: 32px; border: 2px solid #000; image-rendering: pixelated; }
 
-        input, textarea { 
-            width: 100%; padding: 12px; margin: 8px 0; background: rgba(0,0,0,0.7); color: #55ff55; 
-            border: 2px solid #555; font-family: 'Consolas', monospace; box-sizing: border-box; 
-        }
-
-        .input-chat-fixed { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            padding: 15px; background: rgba(34,34,34,0.95); display: none; gap: 10px; border-top: 3px solid #000; 
-        }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; background: rgba(0,0,0,0.7); color: #55ff55; border: 2px solid #555; box-sizing: border-box; }
+        .input-chat-fixed { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; background: rgba(34,34,34,0.95); display: none; gap: 10px; border-top: 3px solid #000; }
     </style>
 </head>
 <body>
 
     <div id="loading-screen">
-        <h2 style="color:var(--mc-green); font-size: 3rem; margin-bottom:0;">MINECRAFTEANOS</h2>
-        <p class="mc-font" style="font-size: 1.5rem; letter-spacing: 4px;">CARGANDO</p>
+        <h2 style="color:var(--mc-green); font-size: 3rem; margin-bottom:10px;">MINECRAFTEANOS</h2>
+        <div style="display:flex; align-items:center;">
+            <div id="status-dot"></div>
+            <p class="mc-font" id="load-text" style="font-size: 1.5rem; margin:0;">CONECTANDO...</p>
+        </div>
     </div>
 
     <div id="auth-screen">
@@ -108,9 +87,7 @@
     </div>
 
     <header>
-        <div>
-            <strong class="mc-font" style="font-size: 1.8rem; color: var(--mc-green); text-shadow: 2px 2px #000;">MINECRAFTEANOS</strong>
-        </div>
+        <strong class="mc-font" style="font-size: 1.8rem; color: var(--mc-green); text-shadow: 2px 2px #000;">MINECRAFTEANOS</strong>
         <div class="user-controls" style="display:flex; align-items:center;">
             <label class="pfp-container">
                 <img id="my-pfp" src="https://mc-heads.net/avatar/steve">
@@ -128,15 +105,15 @@
     <div id="tab-news" class="content-area active">
         <div id="admin-panel" style="display:none; background:rgba(0,0,0,0.6); padding:20px; border:2px dashed var(--mc-green); margin-bottom:30px; max-width:800px; margin: 0 auto 30px auto;">
             <h3 style="margin-top:0">Panel Administrativo</h3>
-            <input type="text" id="news-title" placeholder="Título de la noticia...">
+            <input type="text" id="news-title" placeholder="Título...">
             <input type="file" id="news-file" accept="image/*">
-            <textarea id="news-desc" rows="3" placeholder="Contenido de la noticia..."></textarea>
+            <textarea id="news-desc" rows="3" placeholder="Contenido..."></textarea>
             <button class="mc-btn" onclick="postNews()">PUBLICAR NOTICIA</button>
         </div>
         <div id="news-container"></div>
     </div>
 
-    <div id="tab-chat" class="content-area" style="padding-bottom: 100px;">
+    <div id="tab-chat" class="content-area">
         <div id="chat-messages"></div>
     </div>
 
@@ -146,25 +123,30 @@
     </div>
 
     <script>
-        // PEERS ESTABLES - No los cambies para no perder sincronía
-        const gun = Gun({
-            peers: [
-                'https://gun-manhattan.herokuapp.com/gun',
-                'https://gundb-relay-ml9v.onrender.com/gun',
-                'https://peer.wall.org/gun'
-            ],
-            localStorage: true // Esto guarda los datos en el navegador del usuario
-        });
+        // PEERS ACTUALIZADOS Y ESTABLES (2025)
+        const peers = [
+            'https://gun-manhattan.herokuapp.com/gun',
+            'https://relay.peer.ooo/gun',
+            'https://gun-us.herokuapp.com/gun',
+            'https://gun-matrix.herokuapp.com/gun'
+        ];
 
+        const gun = Gun({ peers: peers, localStorage: true });
         const user = gun.user().recall({storage: true});
 
-        // NOMBRES DE NODOS FIJOS (Si cambias estos strings, se resetean los datos)
-        const newsDb = gun.get('minecrafteanos_news_PROD'); 
-        const chatDb = gun.get('minecrafteanos_chat_PROD');
-        const profilesDb = gun.get('minecrafteanos_profiles_PROD');
+        // Bases de datos globales
+        const newsDb = gun.get('mc_news_global_v1');
+        const chatDb = gun.get('mc_chat_global_v1');
+        const profilesDb = gun.get('mc_profiles_global_v1');
         
         const ADMIN_NAME = "Dylangamer2345";
         let appIniciada = false;
+
+        // Detector de conexión visual
+        gun.on('hi', () => {
+            document.getElementById('status-dot').classList.add('online');
+            document.getElementById('load-text').innerText = "CARGANDO";
+        });
 
         const getHead = (name) => `https://mc-heads.net/avatar/${name || 'steve'}`;
 
@@ -192,18 +174,18 @@
         }
 
         function auth(mode) {
-            const alias = document.getElementById('user-alias').value;
-            const pass = document.getElementById('user-pass').value;
+            const alias = document.getElementById('user-alias').value.trim();
+            const pass = document.getElementById('user-pass').value.trim();
             if(!alias || !pass) return alert("Completa los campos");
 
             if(mode === 'register') {
                 user.create(alias, pass, (ack) => {
                     if(ack.err) alert(ack.err);
-                    else alert("¡Registrado! Ahora dale a Entrar");
+                    else alert("¡Registrado! Dale a ENTRAR");
                 });
             } else {
                 user.auth(alias, pass, (ack) => {
-                    if(ack.err) alert("Error de acceso");
+                    if(ack.err) alert("Usuario o clave incorrecta");
                     else startApp();
                 });
             }
@@ -217,16 +199,20 @@
 
         function sendChat() {
             const input = document.getElementById('chat-input');
-            if(!input.value.trim()) return;
-            chatDb.set({ msg: input.value, sender: user.is.alias, time: Date.now() });
+            if(!input.value.trim() || !user.is) return;
+            chatDb.set({ 
+                msg: input.value, 
+                sender: user.is.alias, 
+                time: Date.now() 
+            });
             input.value = "";
         }
 
         function loadChat() {
             const box = document.getElementById('chat-messages');
-            chatDb.map().on((data, id) => { // Usamos .on para recibir mensajes en tiempo real
+            chatDb.map().on((data, id) => {
                 if(!data || !data.sender || document.getElementById('msg-'+id)) return;
-                const isMe = data.sender === user.is.alias;
+                const isMe = user.is && data.sender === user.is.alias;
                 const div = document.createElement('div');
                 div.className = `msg ${isMe ? 'me' : ''}`;
                 div.id = 'msg-' + id;
@@ -242,13 +228,10 @@
             });
         }
 
-        // CARGAR NOTICIAS (Ahora persistentes)
         function loadNews() {
             const container = document.getElementById('news-container');
-            // Usamos .on para que si Dylan publica algo, les aparezca a todos sin recargar
             newsDb.map().on((data, id) => {
                 if(!data || !data.title || document.getElementById('news-'+id)) return;
-                
                 const card = document.createElement('div');
                 card.id = 'news-' + id;
                 card.className = 'news-card';
@@ -259,7 +242,6 @@
                         <p>${data.desc || ''}</p>
                     </div>
                 `;
-                // Se añade arriba del todo (lo más nuevo primero)
                 container.prepend(card);
             });
         }
@@ -268,29 +250,37 @@
             const title = document.getElementById('news-title').value;
             const desc = document.getElementById('news-desc').value;
             const file = document.getElementById('news-file').files[0];
-            
             if(!title || !file) return alert("Falta título o imagen");
             
+            // Reducir calidad de imagen para mejorar sincronización
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (e) => {
-                // Guardamos en el nodo PROD que es persistente
-                newsDb.set({ 
-                    title: title, 
-                    desc: desc, 
-                    img: e.target.result, 
-                    time: Date.now() 
-                });
-                alert("¡Noticia publicada correctamente!");
-                // Limpiar campos
-                document.getElementById('news-title').value = "";
-                document.getElementById('news-desc').value = "";
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const maxW = 800;
+                    const scale = maxW / img.width;
+                    canvas.width = maxW;
+                    canvas.height = img.height * scale;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    newsDb.set({ 
+                        title: title, 
+                        desc: desc, 
+                        img: canvas.toDataURL('image/jpeg', 0.7), // Comprimido para que viaje rápido entre dispositivos
+                        time: Date.now() 
+                    });
+                    alert("Noticia enviada a todos los dispositivos!");
+                };
             };
         }
 
         function uploadPFP(input) {
             const file = input.files[0];
-            if (!file) return;
+            if (!file || !user.is) return;
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (e) => {
@@ -308,12 +298,13 @@
 
         window.onload = () => {
             const sesionPrevia = localStorage.getItem('mc_sesion_activa');
+            // Si en 5 segundos no conecta, mostrar el login igual por si acaso
             setTimeout(() => {
                 if (!appIniciada) {
                     document.getElementById('loading-screen').style.display = 'none';
                     document.getElementById('auth-screen').style.display = 'flex';
                 }
-            }, sesionPrevia ? 4000 : 1500);
+            }, 6000);
         };
     </script>
 </body>
