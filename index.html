@@ -17,7 +17,7 @@
         }
 
         body { 
-            /* Fondo de Pinterest aplicado */
+            /* Fondo de Pinterest de Minecraft */
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
                         url('https://i.pinimg.com/1200x/b1/61/86/b16186708349ead1e9fa67b03d4062c2.jpg');
             background-size: cover;
@@ -128,12 +128,13 @@
     </nav>
 
     <div id="tab-news" class="content-area active">
+        <!-- Panel Admin Solo para Dylangamer2345 -->
         <div id="admin-panel" style="display:none; background:rgba(0,0,0,0.6); padding:20px; border:2px dashed var(--mc-green); margin-bottom:30px; max-width:800px; margin: 0 auto 30px auto;">
-            <h3 style="margin-top:0">Publicar Noticia</h3>
-            <input type="text" id="news-title" placeholder="Título...">
+            <h3 style="margin-top:0">Panel Administrativo</h3>
+            <input type="text" id="news-title" placeholder="Título de la noticia...">
             <input type="file" id="news-file" accept="image/*">
-            <textarea id="news-desc" rows="3" placeholder="Contenido..."></textarea>
-            <button class="mc-btn" onclick="postNews()">PUBLICAR</button>
+            <textarea id="news-desc" rows="3" placeholder="Contenido de la noticia..."></textarea>
+            <button class="mc-btn" onclick="postNews()">PUBLICAR NOTICIA</button>
         </div>
         <div id="news-container"></div>
     </div>
@@ -158,10 +159,11 @@
         const chatDb = gun.get('mc_chat_v22');
         const profilesDb = gun.get('mc_profiles_v22');
         
-        const ADMIN_NAME = "Dylan2408R2";
+        // ADMIN CAMBIADO A Dylangamer2345
+        const ADMIN_NAME = "Dylangamer2345";
         let appIniciada = false;
 
-        // --- Lógica de Skins estilo NameMC ---
+        // --- Skins estilo NameMC ---
         const getHead = (name) => `https://mc-heads.net/avatar/${name || 'steve'}`;
 
         gun.on('auth', () => {
@@ -175,6 +177,7 @@
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'none';
             
+            // Verificación de Admin
             if(user.is && user.is.alias === ADMIN_NAME) {
                 document.getElementById('admin-panel').style.display = 'block';
             }
