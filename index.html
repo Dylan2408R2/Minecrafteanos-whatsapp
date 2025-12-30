@@ -25,66 +25,70 @@
 
         h1, h2, h3, .mc-font { font-family: 'VT323', monospace; text-transform: uppercase; }
 
+        /* --- HEADER FIJO (CORREGIDO) --- */
         header { 
             height: 65px; background: var(--mc-panel); padding: 0 15px; 
             display: flex; justify-content: space-between; border-bottom: 4px solid #000; 
-            align-items: center; flex-shrink: 0;
+            align-items: center; flex-shrink: 0; box-sizing: border-box;
         }
 
-        .pfp-container { width: 40px; height: 40px; border: 2px solid #000; background: #333; overflow: hidden; }
+        .pfp-container { display: block; width: 42px; height: 42px; border: 3px solid #000; background: #333; overflow: hidden; cursor: pointer; }
         .pfp-container img { width: 100%; height: 100%; image-rendering: pixelated; object-fit: cover; }
 
         .mc-btn {
             background: #555; border: 2px solid #000; border-top-color: #888; border-left-color: #888;
-            color: white; padding: 8px; cursor: pointer; font-family: 'VT323', monospace;
-            font-size: 1rem; text-shadow: 1px 1px #000;
+            color: white; padding: 10px; cursor: pointer; font-family: 'VT323', monospace;
+            font-size: 1.1rem; text-shadow: 2px 2px #000;
         }
         .mc-btn:active { border: 2px solid #fff; }
 
+        /* --- OTROS --- */
         #loading-screen { position: fixed; inset: 0; z-index: 2000; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         #auth-screen { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; }
-        .auth-card { background: rgba(0,0,0,0.85); padding: 25px; border: 4px solid #555; width: 280px; text-align: center; }
+        .auth-card { background: rgba(0,0,0,0.85); padding: 30px; border: 4px solid #555; width: 300px; text-align: center; }
         
         nav { display: flex; background: rgba(34, 34, 34, 0.9); border-bottom: 2px solid #000; }
-        nav span { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-family: 'VT323', monospace; font-size: 1.2rem; color: #aaa; }
+        nav span { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-family: 'VT323', monospace; font-size: 1.3rem; color: #aaa; }
         nav span.active { color: var(--mc-accent); background: rgba(255,255,255,0.1); border-bottom: 3px solid var(--mc-accent); }
 
-        .content-area { flex: 1; overflow-y: auto; padding: 15px; display: none; padding-bottom: 80px; }
+        .content-area { flex: 1; overflow-y: auto; padding: 15px; display: none; padding-bottom: 100px; }
         .content-area.active { display: block; }
 
-        .msg { background: rgba(0,0,0,0.5); padding: 8px; display: flex; gap: 10px; border-left: 4px solid #555; margin-bottom: 5px; }
-        .msg.me { border-left: 0; border-right: 4px solid var(--mc-accent); flex-direction: row-reverse; }
+        .msg { background: rgba(0,0,0,0.5); padding: 10px; display: flex; gap: 12px; border-left: 4px solid #555; margin-bottom: 8px; border-radius: 0 4px 4px 0; }
+        .msg.me { border-left: 0; border-right: 4px solid var(--mc-accent); flex-direction: row-reverse; border-radius: 4px 0 0 4px; }
 
-        input { width: 100%; padding: 10px; margin: 5px 0; background: #000; color: #55ff55; border: 2px solid #555; box-sizing: border-box; }
-        .input-chat-fixed { position: fixed; bottom: 0; left: 0; right: 0; padding: 10px; background: #222; display: none; gap: 8px; border-top: 2px solid #000; }
+        .news-card { background: var(--mc-panel); border: 3px solid #000; margin-bottom: 20px; overflow: hidden; max-width: 800px; margin-left: auto; margin-right: auto; }
+        
+        input { width: 100%; padding: 12px; margin: 8px 0; background: #000; color: #55ff55; border: 2px solid #555; box-sizing: border-box; font-family: monospace; }
+        .input-chat-fixed { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; background: #222; display: none; gap: 10px; border-top: 3px solid #000; }
     </style>
 </head>
 <body>
 
     <div id="loading-screen">
-        <h2 class="mc-font" style="color:var(--mc-green); font-size: 2.5rem;">CONECTANDO</h2>
-        <button class="mc-btn" onclick="location.reload()" style="margin-top:20px">FORZAR RECARGA</button>
+        <h2 class="mc-font" style="color:var(--mc-green); font-size: 3rem;">INICIANDO</h2>
+        <p id="conn-status" style="color: #666; font-size: 12px;">Buscando conexión...</p>
     </div>
 
     <div id="auth-screen">
         <div class="auth-card">
-            <h1 class="mc-font" style="color:var(--mc-green);">IDENTIFÍCATE</h1>
+            <h1 class="mc-font" style="color:var(--mc-green);">MINE-LOGIN</h1>
             <input type="text" id="user-alias" placeholder="Usuario">
-            <input type="password" id="user-pass" placeholder="Clave">
+            <input type="password" id="user-pass" placeholder="Contraseña">
             <button class="mc-btn" style="width:100%" onclick="auth('login')">ENTRAR</button>
-            <button class="mc-btn" style="width:100%; margin-top:10px; background:#333" onclick="auth('register')">CREAR CUENTA</button>
+            <button class="mc-btn" style="width:100%; margin-top:10px; background:#333; font-size:0.8rem" onclick="auth('register')">CREAR CUENTA</button>
         </div>
     </div>
 
     <header>
-        <div style="display:flex; align-items:center; gap:10px">
-            <strong class="mc-font" style="color: var(--mc-green);">MINECRAFTEANOS</strong>
-            <button onclick="syncAll()" style="background:none; border:1px solid #444; color:#666; font-size:8px; cursor:pointer">SYNC</button>
+        <strong class="mc-font" style="font-size: 1.5rem; color: var(--mc-green);">MINECRAFTEANOS</strong>
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div id="sync-indicator" style="width:8px; height:8px; background:red; border-radius:50%;"></div>
+            <label class="pfp-container">
+                <img id="my-pfp" src="https://mc-heads.net/avatar/steve">
+                <input type="file" id="pfp-input" hidden accept="image/*" onchange="uploadPFP(this)">
+            </label>
         </div>
-        <label class="pfp-container">
-            <img id="my-pfp" src="https://mc-heads.net/avatar/steve">
-            <input type="file" id="pfp-input" hidden accept="image/*" onchange="uploadPFP(this)">
-        </label>
     </header>
 
     <nav>
@@ -93,10 +97,11 @@
     </nav>
 
     <div id="tab-news" class="content-area active">
-        <div id="admin-panel" style="display:none; background:rgba(0,0,0,0.5); padding:10px; border:1px dashed var(--mc-green); margin-bottom:15px;">
-            <input type="text" id="news-title" placeholder="Título">
+        <div id="admin-panel" style="display:none; background:rgba(0,0,0,0.6); padding:15px; border:2px dashed var(--mc-green); margin-bottom:20px; max-width:800px; margin-left:auto; margin-right:auto;">
+            <h3 class="mc-font" style="margin:0 0 10px 0">Admin Panel</h3>
+            <input type="text" id="news-title" placeholder="Título...">
             <input type="file" id="news-file" accept="image/*">
-            <button class="mc-btn" onclick="postNews()">PUBLICAR</button>
+            <button class="mc-btn" onclick="postNews()" style="width:100%">PUBLICAR</button>
         </div>
         <div id="news-container"></div>
     </div>
@@ -106,37 +111,43 @@
     </div>
 
     <div id="chat-input-container" class="input-chat-fixed">
-        <input type="text" id="chat-input" placeholder="Escribir..." onkeypress="if(event.key==='Enter') sendChat()">
-        <button class="mc-btn" onclick="sendChat()" style="width:80px">ENVIAR</button>
+        <input type="text" id="chat-input" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') sendChat()">
+        <button class="mc-btn" onclick="sendChat()" style="width:100px">ENVIAR</button>
     </div>
 
     <script>
-        // PEERS SELECCIONADOS POR ESTABILIDAD EN 2025
+        // PEERS ACTUALIZADOS PARA MÁXIMA COMPATIBILIDAD
         const gun = Gun({
             peers: [
+                'https://gun-manhattan.herokuapp.com/gun',
                 'https://relay.peer.ooo/gun',
-                'https://gun-us.herokuapp.com/gun',
-                'https://gun-matrix.herokuapp.com/gun'
+                'https://gundb-relay-ml9v.onrender.com/gun'
             ],
             localStorage: true
         });
 
         const user = gun.user().recall({storage: true});
         
-        // Nueva versión de datos para forzar limpieza
-        const newsDb = gun.get('mine_news_v100');
-        const chatDb = gun.get('mine_chat_v100');
-        const profilesDb = gun.get('mine_prof_v100');
+        // Versión 500 para limpiar todo rastro de errores anteriores
+        const newsDb = gun.get('mc_global_news_v500');
+        const chatDb = gun.get('mc_global_chat_v500');
+        const profilesDb = gun.get('mc_global_profiles_v500');
         
         const ADMIN_NAME = "Dylangamer2345";
         let appIniciada = false;
 
-        // --- SISTEMA DE SINCRONIZACIÓN FORZADA ---
-        function syncAll() {
-            console.log("Forzando sincronización...");
-            gun.get('ping').put({ time: Date.now() });
-            location.reload();
-        }
+        // --- MOTOR DE AUTO-SINCRONIZACIÓN ---
+        // Esto reemplaza tu botón de SYNC y lo hace automático
+        setInterval(() => {
+            if (appIniciada) {
+                // "Tocamos" los datos para obligar al servidor a enviarnos lo nuevo
+                chatDb.get('status').put({ lastCheck: Date.now() });
+                document.getElementById('sync-indicator').style.background = '#55ff55';
+                setTimeout(() => { document.getElementById('sync-indicator').style.background = '#226622'; }, 500);
+            }
+        }, 5000);
+
+        gun.on('hi', () => { document.getElementById('conn-status').innerText = "¡Conectado!"; });
 
         gun.on('auth', () => { startApp(); });
 
@@ -145,8 +156,9 @@
             appIniciada = true;
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'none';
-            if(user.is && user.is.alias === ADMIN_NAME) document.getElementById('admin-panel').style.display = 'block';
             
+            if(user.is && user.is.alias === ADMIN_NAME) document.getElementById('admin-panel').style.display = 'block';
+
             profilesDb.get(user.is.alias).once(d => {
                 document.getElementById('my-pfp').src = (d && d.pfp) ? d.pfp : `https://mc-heads.net/avatar/${user.is.alias}`;
             });
@@ -160,30 +172,30 @@
             const txt = input.value.trim();
             if(!txt || !user.is) return;
 
-            const msgData = {
+            chatDb.set({
                 msg: txt,
                 sender: user.is.alias,
-                time: Date.now(),
-                _id: Math.random().toString(36).substr(2, 9) // ID único para evitar colisiones
-            };
-
-            // Publicamos el mensaje
-            chatDb.set(msgData);
-            
-            // "Grito" de respaldo para asegurar que el celular sea escuchado
-            gun.get('last_msg').put(msgData);
+                time: Date.now()
+            });
 
             input.value = "";
         }
 
         function loadChat() {
+            // .on() escucha cambios, pero el setInterval de arriba ayuda a despertarlo
             chatDb.map().on((data, id) => {
                 if(!data || !data.sender || document.getElementById('msg-'+id)) return;
                 const isMe = user.is && data.sender === user.is.alias;
                 const div = document.createElement('div');
                 div.className = `msg ${isMe ? 'me' : ''}`;
                 div.id = 'msg-' + id;
-                div.innerHTML = `<img style="width:30px; height:30px;" src="https://mc-heads.net/avatar/${data.sender}"><div><b style="font-size:12px; color:var(--mc-accent)">${data.sender}</b><div style="font-size:14px">${data.msg}</div></div>`;
+                div.innerHTML = `
+                    <img style="width:32px; height:32px; border:2px solid #000" src="https://mc-heads.net/avatar/${data.sender}">
+                    <div style="width:100%">
+                        <b class="mc-font" style="color:var(--mc-accent); font-size:14px;">${data.sender}</b>
+                        <div style="font-size:15px; margin-top:2px;">${data.msg}</div>
+                    </div>
+                `;
                 document.getElementById('chat-messages').appendChild(div);
                 document.getElementById('tab-chat').scrollTop = document.getElementById('tab-chat').scrollHeight;
             });
@@ -194,8 +206,13 @@
                 if(!data || !data.title || document.getElementById('news-'+id)) return;
                 const card = document.createElement('div');
                 card.id = 'news-' + id;
-                card.style = "background:var(--mc-panel); border:2px solid #000; margin-bottom:15px; overflow:hidden;";
-                card.innerHTML = `<img src="${data.img}" style="width:100%"><div style="padding:10px;"><h3 style="margin:0; color:var(--mc-accent)">${data.title}</h3></div>`;
+                card.className = 'news-card';
+                card.innerHTML = `
+                    <img src="${data.img}" style="width:100%">
+                    <div style="padding:15px;">
+                        <h3 class="mc-font" style="margin:0; color:var(--mc-accent)">${data.title}</h3>
+                    </div>
+                `;
                 document.getElementById('news-container').prepend(card);
             });
         }
@@ -217,7 +234,7 @@
             const alias = document.getElementById('user-alias').value.trim();
             const pass = document.getElementById('user-pass').value.trim();
             if(!alias || !pass) return alert("Faltan datos");
-            if(mode === 'register') user.create(alias, pass, (ack) => { if(ack.err) alert(ack.err); else alert("¡Cuenta creada!"); });
+            if(mode === 'register') user.create(alias, pass, (ack) => { if(ack.err) alert(ack.err); else alert("¡Registrado! Entra ahora."); });
             else user.auth(alias, pass, (ack) => { if(ack.err) alert("Error de clave"); else startApp(); });
         }
 
@@ -240,7 +257,6 @@
         }
 
         window.onload = () => {
-            // Si en 6 segundos no entra, mostrar login (por si fallan los peers)
             setTimeout(() => { if (!appIniciada) { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex'; } }, 6000);
         };
     </script>
