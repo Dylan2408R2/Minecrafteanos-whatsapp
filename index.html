@@ -10,7 +10,7 @@
     <style>
         :root {
             --mc-green: #3aa03a;
-            --mc-panel: rgba(49, 49, 49, 0.9);
+            --mc-panel: rgba(49, 49, 49, 0.95);
             --mc-text: #ffffff;
             --mc-accent: #ffcc00;
         }
@@ -25,6 +25,32 @@
 
         h1, h2, h3, .mc-font { font-family: 'VT323', monospace; text-transform: uppercase; }
 
+        /* --- CABEZAL CORREGIDO (TAMAÑO FIJO) --- */
+        header { 
+            height: 65px; /* Altura fija para que no crezca */
+            background: var(--mc-panel); 
+            padding: 0 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            border-bottom: 4px solid #000; 
+            align-items: center; 
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+
+        .pfp-container { 
+            display: block; /* Para que respete el ancho y alto */
+            width: 42px; 
+            height: 42px; 
+            border: 3px solid #000; 
+            background: #333; 
+            cursor: pointer; 
+            overflow: hidden; 
+            box-sizing: border-box;
+        }
+        .pfp-container img { width: 100%; height: 100%; image-rendering: pixelated; object-fit: cover; }
+
+        /* --- RESTO DE LA INTERFAZ --- */
         .mc-btn {
             background: #555; border: 2px solid #000; border-top-color: #888; border-left-color: #888;
             color: white; padding: 10px; cursor: pointer; font-family: 'VT323', monospace;
@@ -36,18 +62,14 @@
         #auth-screen { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; }
         .auth-card { background: rgba(0,0,0,0.85); padding: 30px; border: 4px solid #555; width: 320px; text-align: center; }
         
-        header { background: var(--mc-panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 4px solid #000; align-items: center; }
-        .pfp-container { width: 42px; height: 42px; border: 3px solid #000; background: #333; cursor: pointer; overflow: hidden; }
-        .pfp-container img { width: 100%; height: 100%; image-rendering: pixelated; object-fit: cover; }
-        
-        nav { display: flex; background: rgba(34, 34, 34, 0.9); border-bottom: 2px solid #000; }
+        nav { display: flex; background: rgba(34, 34, 34, 0.9); border-bottom: 2px solid #000; flex-shrink: 0; }
         nav span { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-family: 'VT323', monospace; font-size: 1.3rem; color: #aaa; }
         nav span.active { color: var(--mc-accent); background: rgba(255,255,255,0.1); border-bottom: 3px solid var(--mc-accent); }
 
         .content-area { flex: 1; overflow-y: auto; padding: 20px; display: none; padding-bottom: 100px; }
         .content-area.active { display: block; }
 
-        .news-card { background: var(--mc-panel); margin: 0 auto 25px auto; border: 3px solid #000; max-width: 800px; }
+        .news-card { background: var(--mc-panel); margin: 0 auto 25px auto; border: 3px solid #000; max-width: 800px; overflow: hidden; }
         .news-card img { width: 100%; border-bottom: 3px solid #000; display: block; max-height: 400px; object-fit: cover; }
 
         #chat-messages { display: flex; flex-direction: column; gap: 8px; max-width: 900px; margin: 0 auto; }
@@ -90,10 +112,10 @@
     </nav>
 
     <div id="tab-news" class="content-area active">
-        <div id="admin-panel" style="display:none; background:rgba(0,0,0,0.6); padding:10px; border:1px dashed var(--mc-green); margin-bottom:20px;">
+        <div id="admin-panel" style="display:none; background:rgba(0,0,0,0.6); padding:15px; border:1px dashed var(--mc-green); margin-bottom:20px; max-width:800px; margin-left:auto; margin-right:auto;">
             <input type="text" id="news-title" placeholder="Título noticia">
-            <input type="file" id="news-file" accept="image/*">
-            <button class="mc-btn" onclick="postNews()">PUBLICAR</button>
+            <input type="file" id="news-file" accept="image/*" style="font-size: 10px;">
+            <button class="mc-btn" onclick="postNews()" style="font-size: 1rem; padding: 5px;">PUBLICAR</button>
         </div>
         <div id="news-container"></div>
     </div>
@@ -108,19 +130,15 @@
     </div>
 
     <script>
-        // PEERS FILTRADOS (Los más estables para evitar el cartel de reconexión)
         const gun = Gun({
-            peers: [
-                'https://gun-manhattan.herokuapp.com/gun',
-                'https://relay.peer.ooo/gun'
-            ],
+            peers: ['https://gun-manhattan.herokuapp.com/gun', 'https://relay.peer.ooo/gun'],
             localStorage: true
         });
 
         const user = gun.user().recall({storage: true});
-        const newsDb = gun.get('mc_pro_noticias_v3');
-        const chatDb = gun.get('mc_pro_chat_v3');
-        const profilesDb = gun.get('mc_pro_perfiles_v3');
+        const newsDb = gun.get('mc_pro_noticias_final');
+        const chatDb = gun.get('mc_pro_chat_final');
+        const profilesDb = gun.get('mc_pro_perfiles_final');
         
         const ADMIN_NAME = "Dylangamer2345";
         let appIniciada = false;
@@ -132,35 +150,27 @@
             appIniciada = true;
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'none';
+            if(user.is && user.is.alias === ADMIN_NAME) document.getElementById('admin-panel').style.display = 'block';
             
-            if(user.is && user.is.alias === ADMIN_NAME) {
-                document.getElementById('admin-panel').style.display = 'block';
-            }
-            
+            profilesDb.get(user.is.alias).once(d => { 
+                if(d && d.pfp) document.getElementById('my-pfp').src = d.pfp;
+                else document.getElementById('my-pfp').src = `https://mc-heads.net/avatar/${user.is.alias}`;
+            });
+
             loadNews();
             loadChat();
         }
 
-        // --- MEJORA CRÍTICA DE ENVÍO ---
         function sendChat() {
             const input = document.getElementById('chat-input');
             const txt = input.value.trim();
             if(!txt || !user.is) return;
-
             const msgId = Date.now().toString();
-            const msgData = { msg: txt, sender: user.is.alias, time: Date.now() };
-
-            // Enviamos el mensaje al nodo principal
-            chatDb.get(msgId).put(msgData);
-            
-            // Forzamos al servidor a reconocer el cambio
-            gun.get('sync_checkpoint').put({ last: msgId });
-
+            chatDb.get(msgId).put({ msg: txt, sender: user.is.alias, time: Date.now() });
             input.value = "";
         }
 
         function loadChat() {
-            // Usamos .map() pero sobre el nodo para asegurar que lea todo
             chatDb.map().on((data, id) => {
                 if(!data || !data.sender || document.getElementById('msg-'+id)) return;
                 const isMe = user.is && data.sender === user.is.alias;
@@ -179,7 +189,7 @@
                 const card = document.createElement('div');
                 card.id = 'news-' + id;
                 card.className = 'news-card';
-                card.innerHTML = `<img src="${data.img}"><div style="padding:10px;"><h3>${data.title}</h3></div>`;
+                card.innerHTML = `<img src="${data.img}"><div style="padding:15px;"><h3 style="margin:0; color:var(--mc-accent)">${data.title}</h3></div>`;
                 document.getElementById('news-container').prepend(card);
             });
         }
@@ -187,22 +197,23 @@
         function postNews() {
             const title = document.getElementById('news-title').value;
             const file = document.getElementById('news-file').files[0];
-            if(!title || !file) return;
+            if(!title || !file) return alert("Faltan datos");
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (e) => {
                 const id = Date.now().toString();
                 newsDb.get(id).put({ title, img: e.target.result, author: user.is.alias, time: Date.now() });
-                alert("¡Noticia enviada!");
+                alert("¡Publicado!");
+                document.getElementById('news-title').value = "";
             };
         }
 
         function auth(mode) {
             const alias = document.getElementById('user-alias').value.trim();
             const pass = document.getElementById('user-pass').value.trim();
-            if(!alias || !pass) return;
+            if(!alias || !pass) return alert("Completa los datos");
             if(mode === 'register') user.create(alias, pass, (ack) => { if(ack.err) alert(ack.err); else alert("Cuenta creada"); });
-            else user.auth(alias, pass, (ack) => { if(ack.err) alert("Error"); else startApp(); });
+            else user.auth(alias, pass, (ack) => { if(ack.err) alert("Error de clave"); else startApp(); });
         }
 
         function switchTab(tab) {
