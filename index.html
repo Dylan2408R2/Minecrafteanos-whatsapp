@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creeper Chat - Local Account System</title>
+    <title>Creeper Chat - Share Edition</title>
     <link href="https://fonts.cdnfonts.com/css/minecraft-4" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
@@ -13,7 +13,7 @@
         
         /* Tabs */
         .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
-        .tab { flex: 1; padding: 10px; background: #333; border: 3px solid #000; cursor: pointer; color: #888; }
+        .tab { flex: 1; padding: 10px; background: #333; border: 3px solid #000; cursor: pointer; color: #888; font-size: 0.8rem; }
         .tab.active { background: var(--gui); color: #000; border-bottom: none; }
 
         input { font-family: 'Minecraft', sans-serif; padding: 12px; border: 3px solid #000; background: #111; color: #00ff00; margin: 5px 0; width: 90%; box-sizing: border-box; outline: none; }
@@ -24,6 +24,10 @@
         #game-container { width: 100%; height: 130px; background: #222; border: 3px solid #000; margin: 15px 0; display: none; overflow: hidden; }
         #loading-screen { display: none; flex-direction: column; align-items: center; }
 
+        /* Share Group */
+        .share-group { display: flex; gap: 5px; margin-top: 5px; justify-content: center; width: 90%; margin-left: auto; margin-right: auto; }
+        .btn-small { padding: 8px 10px; font-size: 0.7rem; flex: 1; }
+
         /* Chat */
         #chat-screen { display: none; width: 95%; max-width: 900px; height: 90vh; flex-direction: column; }
         #messages { flex-grow: 1; background: rgba(0,0,0,0.9); border: 4px solid var(--gui); margin-bottom: 10px; overflow-y: auto; padding: 20px; }
@@ -31,25 +35,21 @@
         .avatar { width: 48px; height: 48px; border: 3px solid #000; image-rendering: pixelated; }
         .msg-box { background: #333; padding: 10px; border-left: 4px solid var(--green); flex: 1; }
 
-        /* Emojis Animados */
-        .creeper-emoji { display: inline-block; width: 32px; height: 32px; vertical-align: middle; background-size: 100% 100%; image-rendering: pixelated; margin: 0 3px; background-color: var(--green); }
-        .bounce { animation: bounce 1s infinite; }
-        .angry { animation: explode 0.4s infinite alternate, shake 0.1s infinite; }
+        /* Emojis */
+        .creeper-emoji { display: inline-block; width: 32px; height: 32px; vertical-align: middle; background-size: 100% 100%; image-rendering: pixelated; margin: 0 3px; background-color: var(--green); animation: bounce 1s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        @keyframes explode { from { background-color: var(--green); } to { background-color: #ff3333; } }
-        @keyframes shake { 0% { transform: translate(1px); } 100% { transform: translate(-1px); } }
     </style>
 </head>
 <body>
 
-    <!-- PANTALLA DE CUENTAS (LOCAL) -->
+    <!-- PANTALLA DE CUENTAS -->
     <div id="auth-screen" class="window">
         <h1 style="color: var(--green); margin-top: 0;">CREEPER NET</h1>
         <div class="tabs">
             <div id="tab-login" class="tab active" onclick="setTab('login')">LOGIN</div>
             <div id="tab-reg" class="tab" onclick="setTab('reg')">REGISTRO</div>
         </div>
-        <input type="text" id="user" placeholder="Nombre de Minecraft" oninput="prevSkin()">
+        <input type="text" id="user" placeholder="Usuario NameMC" oninput="prevSkin()">
         <img id="skin-p" src="https://mc-heads.net/avatar/Steve" style="width: 50px; margin: 10px; border: 2px solid #000; image-rendering: pixelated;">
         <input type="password" id="pass" placeholder="Contraseña">
         <br>
@@ -69,11 +69,17 @@
     <!-- CONEXIÓN -->
     <div id="connect-step" class="window" style="display:none;">
         <h2 style="color:var(--green)">MUNDO LISTO</h2>
-        <p style="font-size: 0.7rem;">TU ID (Pasalo a un amigo):</p>
+        <p style="font-size: 0.7rem;">TU ID PARA COMPARTIR:</p>
         <input type="text" id="my-id" readonly style="color: white; text-align: center;">
-        <hr style="border:1px solid #555; margin: 15px 0;">
-        <p style="font-size: 0.7rem;">O PEGA EL ID DE TU AMIGO:</p>
-        <input type="text" id="peer-id-input" placeholder="Pegar ID aquí...">
+        
+        <div class="share-group">
+            <button class="btn-small" onclick="copyID()">COPIAR</button>
+            <button class="btn-small" onclick="shareID()">COMPARTIR</button>
+        </div>
+
+        <hr style="border:1px solid #555; margin: 20px 0;">
+        <p style="font-size: 0.7rem;">PEGA EL ID DE TU AMIGO:</p>
+        <input type="text" id="peer-id-input" placeholder="ID aquí...">
         <br>
         <button onclick="connectToFriend()">CONECTARSE</button>
     </div>
@@ -82,7 +88,7 @@
     <div id="chat-screen">
         <div id="messages"></div>
         <div style="display:flex; gap:10px;">
-            <input type="text" id="msg-input" placeholder="Habla aquí..." style="margin:0;">
+            <input type="text" id="msg-input" placeholder="Escribe algo..." style="margin:0;">
             <button onclick="sendMsg()" style="margin:0;">ENVIAR</button>
         </div>
     </div>
@@ -103,29 +109,47 @@
             document.getElementById('skin-p').src = u ? `https://mc-heads.net/avatar/${u}` : `https://mc-heads.net/avatar/Steve`;
         }
 
-        // --- SISTEMA DE CUENTAS LOCALES ---
         function handleAuth() {
             const u = document.getElementById('user').value.trim().toLowerCase();
             const p = document.getElementById('pass').value;
-            if(!u || !p) return alert("¡Completa los campos!");
+            if(!u || !p) return alert("¡Datos incompletos!");
 
             const accounts = JSON.parse(localStorage.getItem('creeper_accounts') || '{}');
 
             if(mode === 'reg') {
-                if(accounts[u]) return alert("Ese usuario ya existe.");
+                if(accounts[u]) return alert("Usuario ya registrado.");
                 accounts[u] = p;
                 localStorage.setItem('creeper_accounts', JSON.stringify(accounts));
-                alert("¡Cuenta creada! Ahora logueate.");
+                alert("¡Cuenta creada! Logueate.");
                 setTab('login');
             } else {
-                if(accounts[u] !== p) return alert("Usuario o contraseña incorrectos.");
+                if(accounts[u] !== p) return alert("Error de credenciales.");
                 myName = u;
                 myAvatar = `https://mc-heads.net/avatar/${u}`;
                 startLoading();
             }
         }
 
-        // --- CARGA Y DINO ---
+        // --- ID TOOLS ---
+        function copyID() {
+            const idVal = document.getElementById('my-id').value;
+            navigator.clipboard.writeText(idVal).then(() => {
+                alert("ID Copiado");
+            });
+        }
+
+        function shareID() {
+            const idVal = document.getElementById('my-id').value;
+            if (navigator.share) {
+                navigator.share({
+                    text: idVal // Solo el ID, nada más
+                }).catch(() => {});
+            } else {
+                copyID(); // Fallback si el navegador no soporta share
+            }
+        }
+
+        // --- CARGA ---
         function startLoading() {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('loading-screen').style.display = 'flex';
@@ -155,11 +179,11 @@
                 if(!gameOn) return;
                 ctx.fillStyle = "#222"; ctx.fillRect(0,0,500,130);
                 cv += 0.8; cy += cv; if(cy > 90) { cy = 90; cv = 0; }
-                ctx.fillStyle = "#52ad32"; ctx.fillRect(40, cy, 30, 30); // Creeper
+                ctx.fillStyle = "#52ad32"; ctx.fillRect(40, cy, 30, 30);
                 if(Math.random() < 0.02) obs.push(500);
                 obs.forEach((x,i) => {
                     obs[i] -= 7; ctx.fillStyle = "red"; ctx.fillRect(x, 100, 25, 25);
-                    if(x < 70 && x > 20 && cy > 75) obs = []; // Colisión
+                    if(x < 70 && x > 20 && cy > 75) obs = [];
                 });
                 obs = obs.filter(x => x > -30);
                 requestAnimationFrame(loop);
@@ -168,10 +192,8 @@
             loop();
         }
 
-        // --- CHAT P2P ---
         function connectToFriend() {
             const id = document.getElementById('peer-id-input').value.trim();
-            if(!id) return alert("Pega un ID");
             conn = peer.connect(id);
             openChat();
         }
@@ -184,7 +206,6 @@
 
         function sendMsg() {
             const i = document.getElementById('msg-input');
-            if(!i.value) return;
             const d = { u: myName, t: i.value, a: myAvatar };
             conn.send(d); addMsg(myName, i.value, myAvatar); i.value = "";
         }
@@ -200,9 +221,8 @@
         function creeperize(t) {
             const faces = { "🤩":"stars", "😍":"stars", "😯":"surprise", "😭":"sad", "😠":"angry", "😀":"happy" };
             for(let [e, tipo] of Object.entries(faces)) {
-                let anim = tipo === 'angry' ? 'angry' : 'bounce';
                 let svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'><path d='M1,1 h2 v2 h-2 z M5,1 h2 v2 h-2 z' fill='black'/><path d='M3,3 h2 v3 h-2 z M2,4 h1 v3 h-1 z M5,4 h1 v3 h-1 z' fill='black'/>${tipo==='sad'?'<path d="M1,3 h1 v3 h-1 z M6,3 h1 v3 h-1 z" fill="%2300eeff"/>':''}</svg>`;
-                t = t.split(e).join(`<span class="creeper-emoji ${anim}" style="background-image:url('data:image/svg+xml;base64,${btoa(svg)}')"></span>`);
+                t = t.split(e).join(`<span class="creeper-emoji" style="background-image:url('data:image/svg+xml;base64,${btoa(svg)}')"></span>`);
             }
             return t;
         }
