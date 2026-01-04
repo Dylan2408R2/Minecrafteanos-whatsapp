@@ -3,40 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creeper Chat - Edición Noticias</title>
+    <title>Creeper Chat - Novedades Edition</title>
     <link href="https://fonts.cdnfonts.com/css/minecraft-4" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
         :root { --green: #52ad32; --dark: #1a1a1a; --gui: #c6c6c6; }
-        body { background-color: var(--dark); color: white; font-family: 'Minecraft', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; user-select: none; }
+        body { background-color: var(--dark); color: white; font-family: 'Minecraft', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         
-        /* Barra de Noticias Simplificada */
-        #news-bar { position: fixed; top: 0; width: 100%; background: #000; color: #ffff00; padding: 8px; border-bottom: 2px solid #333; z-index: 100; display: none; white-space: nowrap; font-size: 0.9rem; }
-        #news-label { color: #fff; background: #cc0000; padding: 2px 8px; margin-right: 10px; border-radius: 2px; font-size: 0.7rem; vertical-align: middle; }
-        #news-text { display: inline-block; animation: marquee 20s linear infinite; vertical-align: middle; }
-        @keyframes marquee { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+        /* BOTÓN NOVEDADES */
+        #novedades-btn { position: fixed; top: 15px; left: 15px; background: var(--gui); border: 3px solid #000; padding: 10px; cursor: pointer; display: none; align-items: center; gap: 10px; z-index: 100; box-shadow: 4px 4px 0px #000; }
+        #novedades-btn img { width: 30px; image-rendering: pixelated; }
 
+        /* VENTANA MODAL DE NOVEDADES */
+        #novedades-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; justify-content: center; align-items: center; }
+        .modal-content { background: #4a4a4a; border: 5px solid #000; padding: 20px; width: 80%; max-width: 500px; text-align: center; box-shadow: 10px 10px 0px var(--green); }
+        .novedades-img { width: 100%; height: 150px; background: url('https://minecraft.wiki/images/Filled_Map_JE2_BE2.png'); background-size: cover; background-position: center; border: 3px solid #000; image-rendering: pixelated; margin-bottom: 15px; }
+
+        /* LOGIN Y CONNECT */
         .window { background: #4a4a4a; border: 5px solid #000; padding: 25px; box-shadow: 10px 10px 0px var(--green); text-align: center; width: 90%; max-width: 500px; }
-        
-        /* Tabs */
-        .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
-        .tab { flex: 1; padding: 10px; background: #333; border: 3px solid #000; cursor: pointer; color: #888; font-size: 0.8rem; }
-        .tab.active { background: var(--gui); color: #000; }
-
         input { font-family: 'Minecraft', sans-serif; padding: 12px; border: 3px solid #000; background: #111; color: #00ff00; margin: 5px 0; width: 90%; box-sizing: border-box; outline: none; }
         button { font-family: 'Minecraft', sans-serif; background: var(--gui); border: 3px solid #fff; border-right-color: #555; border-bottom-color: #555; padding: 12px 24px; cursor: pointer; }
 
-        /* Chat */
-        #chat-screen { display: none; width: 95%; max-width: 900px; height: 82vh; flex-direction: column; margin-top: 50px; }
+        /* CHAT */
+        #chat-screen { display: none; width: 95%; max-width: 900px; height: 85vh; flex-direction: column; }
         #messages { flex-grow: 1; background: rgba(0,0,0,0.9); border: 4px solid var(--gui); margin-bottom: 10px; overflow-y: auto; padding: 20px; }
         .msg-row { display: flex; gap: 12px; margin-bottom: 15px; text-align: left; }
         .avatar { width: 48px; height: 48px; border: 3px solid #000; image-rendering: pixelated; }
         .msg-box { background: #333; padding: 10px; border-left: 4px solid var(--green); flex: 1; }
 
-        /* Admin News Panel */
-        #admin-panel { display: none; background: #222; padding: 10px; border: 2px solid gold; margin-bottom: 5px; text-align: center; }
+        /* ADMIN PANEL */
+        #admin-panel { display: none; background: #222; padding: 10px; border: 2px solid gold; margin-bottom: 5px; }
 
-        /* Emojis */
+        /* EMOJIS CREEPER */
         .creeper-emoji { display: inline-block; width: 32px; height: 32px; vertical-align: middle; background-size: 100% 100%; image-rendering: pixelated; margin: 0 3px; background-color: var(--green); }
         .bounce { animation: bounce 1s infinite; }
         .angry { animation: explode 0.4s infinite alternate, shake 0.1s infinite; }
@@ -47,56 +45,56 @@
 </head>
 <body>
 
-    <div id="news-bar">
-        <span id="news-label">NOTICIAS</span>
-        <div id="news-text">BIENVENIDOS AL CHAT. ESPERANDO ACTUALIZACIONES...</div>
+    <!-- BOTÓN NOVEDADES -->
+    <div id="novedades-btn" onclick="toggleModal(true)">
+        <img src="https://minecraft.wiki/images/Book_and_Quill_JE2_BE2.png" alt="icon">
+        <span>NOVEDADES</span>
     </div>
 
-    <!-- PANTALLA DE CUENTAS -->
+    <!-- MODAL NOVEDADES -->
+    <div id="novedades-modal">
+        <div class="modal-content">
+            <h2 style="color: gold; margin-top: 0;">NOVEDADES DEL MUNDO</h2>
+            <div class="novedades-img"></div>
+            <p id="novedades-text-display">Esperando actualizaciones del servidor...</p>
+            <button onclick="toggleModal(false)">CERRAR</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA AUTH -->
     <div id="auth-screen" class="window">
         <h1 style="color: var(--green); margin-top: 0;">CREEPER NET</h1>
-        <div class="tabs">
-            <div id="tab-login" class="tab active" onclick="setTab('login')">LOGIN</div>
-            <div id="tab-reg" class="tab" onclick="setTab('reg')">REGISTRO</div>
+        <div style="margin-bottom: 15px;">
+            <button onclick="setMode('login')" id="btn-login" style="background: var(--gui);">LOGIN</button>
+            <button onclick="setMode('reg')" id="btn-reg">REGISTRO</button>
         </div>
-        <input type="text" id="user" placeholder="Nombre NameMC" oninput="prevSkin()">
-        <img id="skin-p" src="https://mc-heads.net/avatar/Steve" style="width: 50px; margin: 10px; border: 2px solid #000; image-rendering: pixelated;">
+        <input type="text" id="user" placeholder="Nombre NameMC" oninput="updateAvatar()">
+        <img id="avatar-preview" src="https://mc-heads.net/avatar/Steve" style="width: 50px; border: 2px solid #000; margin: 10px;">
         <input type="password" id="pass" placeholder="Contraseña">
         <br>
-        <button id="auth-btn" onclick="handleAuth()">ENTRAR AL MUNDO</button>
-    </div>
-
-    <!-- CARGA -->
-    <div id="loading-screen" class="window" style="display:none;">
-        <h2>CARGANDO CHAT...</h2>
-        <div style="width:100%; height:12px; background:#111; border:2px solid #000; margin-top: 20px;">
-            <div id="bar" style="width:0%; height:100%; background:var(--green); transition:0.3s;"></div>
-        </div>
+        <button id="main-auth-btn" onclick="auth()">ENTRAR AL MUNDO</button>
     </div>
 
     <!-- CONEXIÓN -->
     <div id="connect-step" class="window" style="display:none;">
-        <h2 style="color:var(--green)">MUNDO LISTO</h2>
-        <input type="text" id="my-id" readonly style="color: white; text-align: center;">
-        <div style="margin-top:10px;">
-            <button onclick="copyID()" style="padding: 8px 15px; font-size: 0.7rem;">COPIAR ID</button>
-            <button onclick="shareID()" style="padding: 8px 15px; font-size: 0.7rem;">COMPARTIR</button>
-        </div>
-        <hr style="border:1px solid #555; margin: 15px 0;">
+        <h2 style="color:var(--green)">CONEXIÓN LISTA</h2>
+        <input type="text" id="my-id" readonly style="text-align: center;">
+        <button onclick="copyID()">COPIAR ID</button>
+        <hr style="margin: 20px 0; border: 1px solid #555;">
         <input type="text" id="peer-id-input" placeholder="ID de tu amigo...">
         <br>
-        <button onclick="connectToFriend()">CONECTARSE</button>
+        <button onclick="connect()">CONECTAR</button>
     </div>
 
-    <!-- CHAT -->
+    <!-- CHAT SCREEN -->
     <div id="chat-screen">
         <div id="admin-panel">
-            <input type="text" id="news-input" placeholder="Nueva noticia..." style="width: 60%; font-size: 0.7rem;">
-            <button onclick="broadcastNews()" style="padding: 5px 10px; font-size: 0.6rem; background: gold; color: black;">PUBLICAR NOTICIA</button>
+            <input type="text" id="news-input" placeholder="Nueva novedad global..." style="width: 60%; font-size: 0.7rem;">
+            <button onclick="publishNews()" style="background: gold; color: black; font-size: 0.7rem;">ACTUALIZAR NOVEDADES</button>
         </div>
         <div id="messages"></div>
         <div style="display:flex; gap:10px;">
-            <input type="text" id="msg-input" placeholder="Habla aquí..." style="margin:0;">
+            <input type="text" id="msg-input" placeholder="Escribe aquí..." style="margin:0;">
             <button onclick="sendMsg()" style="margin:0;">ENVIAR</button>
         </div>
     </div>
@@ -105,106 +103,79 @@
         let mode = 'login';
         let peer, conn, myName, myAvatar;
 
-        function setTab(t) {
-            mode = t;
-            document.getElementById('tab-login').classList.toggle('active', t === 'login');
-            document.getElementById('tab-reg').classList.toggle('active', t === 'reg');
+        function setMode(m) {
+            mode = m;
+            document.getElementById('btn-login').style.background = m === 'login' ? 'var(--gui)' : '#333';
+            document.getElementById('btn-reg').style.background = m === 'reg' ? 'var(--gui)' : '#333';
+            document.getElementById('main-auth-btn').innerText = m === 'login' ? 'ENTRAR AL MUNDO' : 'CREAR CUENTA';
         }
 
-        function prevSkin() {
+        function updateAvatar() {
             const u = document.getElementById('user').value;
-            document.getElementById('skin-p').src = u ? `https://mc-heads.net/avatar/${u}` : `https://mc-heads.net/avatar/Steve`;
+            document.getElementById('avatar-preview').src = `https://mc-heads.net/avatar/${u || 'Steve'}`;
         }
 
-        function handleAuth() {
+        function auth() {
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value;
-            if(!u || !p) return alert("¡Completa los datos!");
-
-            const accounts = JSON.parse(localStorage.getItem('creeper_accounts') || '{}');
-
-            if(mode === 'reg') {
-                if(accounts[u.toLowerCase()]) return alert("Ya existe.");
-                accounts[u.toLowerCase()] = p;
-                localStorage.setItem('creeper_accounts', JSON.stringify(accounts));
-                alert("¡Cuenta creada!"); setTab('login');
+            const db = JSON.parse(localStorage.getItem('creeper_db') || '{}');
+            if (mode === 'reg') {
+                if(db[u.toLowerCase()]) return alert("Ya existe");
+                db[u.toLowerCase()] = p;
+                localStorage.setItem('creeper_db', JSON.stringify(db));
+                alert("Registrado"); setMode('login');
             } else {
-                if(accounts[u.toLowerCase()] !== p) return alert("Datos incorrectos.");
-                myName = u;
-                myAvatar = `https://mc-heads.net/avatar/${u}`;
-                startLoading();
+                if(db[u.toLowerCase()] !== p) return alert("Error");
+                myName = u; myAvatar = `https://mc-heads.net/avatar/${u}`;
+                initPeer();
             }
         }
 
-        function startLoading() {
+        function initPeer() {
             document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('loading-screen').style.display = 'flex';
             peer = new Peer();
             peer.on('open', id => {
-                document.getElementById('bar').style.width = "100%";
-                setTimeout(() => {
-                    document.getElementById('loading-screen').style.display = 'none';
-                    document.getElementById('connect-step').style.display = 'block';
-                    document.getElementById('my-id').value = id;
-                }, 800);
+                document.getElementById('connect-step').style.display = 'block';
+                document.getElementById('my-id').value = id;
             });
-            peer.on('connection', c => { conn = c; openChat(); });
+            peer.on('connection', c => { conn = c; setupChat(); });
         }
 
-        function connectToFriend() {
-            const friendId = document.getElementById('peer-id-input').value.trim();
-            if(!friendId) return alert("Pega el ID de tu amigo");
-            conn = peer.connect(friendId);
-            openChat();
+        function connect() {
+            conn = peer.connect(document.getElementById('peer-id-input').value.trim());
+            setupChat();
         }
 
-        function openChat() {
+        function setupChat() {
             document.getElementById('connect-step').style.display = 'none';
             document.getElementById('chat-screen').style.display = 'flex';
-            document.getElementById('news-bar').style.display = 'block';
-            
-            if(myName.toLowerCase() === 'dylangamer2345') {
-                document.getElementById('admin-panel').style.display = 'block';
-            }
+            document.getElementById('novedades-btn').style.display = 'flex';
+            if(myName.toLowerCase() === 'dylangamer2345') document.getElementById('admin-panel').style.display = 'block';
 
             conn.on('data', d => {
-                if(d.type === 'news') updateNewsUI(d.text);
+                if(d.type === 'novedad') document.getElementById('novedades-text-display').innerText = d.text;
                 else addMsg(d.u, d.t, d.a);
             });
         }
 
-        function copyID() {
-            navigator.clipboard.writeText(document.getElementById('my-id').value);
-            alert("ID Copiado");
-        }
+        function toggleModal(show) { document.getElementById('novedades-modal').style.display = show ? 'flex' : 'none'; }
 
-        function shareID() {
-            const idVal = document.getElementById('my-id').value;
-            if (navigator.share) {
-                navigator.share({ text: idVal }).catch(() => {});
-            } else {
-                copyID();
-            }
-        }
-
-        function broadcastNews() {
-            const news = document.getElementById('news-input').value;
-            if(!news) return;
-            const data = { type: 'news', text: news };
-            conn.send(data);
-            updateNewsUI(news);
+        function publishNews() {
+            const txt = document.getElementById('news-input').value;
+            if(!txt) return;
+            conn.send({ type: 'novedad', text: txt });
+            document.getElementById('novedades-text-display').innerText = txt;
             document.getElementById('news-input').value = "";
+            alert("Novedad enviada");
         }
 
-        function updateNewsUI(txt) {
-            document.getElementById('news-text').innerText = txt.toUpperCase();
-        }
+        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id').value); alert("ID Copiado"); }
 
         function sendMsg() {
             const i = document.getElementById('msg-input');
             if(!i.value) return;
-            const d = { u: myName, t: i.value, a: myAvatar };
-            conn.send(d); addMsg(myName, i.value, myAvatar); i.value = "";
+            conn.send({ u: myName, t: i.value, a: myAvatar });
+            addMsg(myName, i.value, myAvatar); i.value = "";
         }
 
         function addMsg(u, t, a) {
@@ -216,18 +187,15 @@
 
         function creeperize(t) {
             const mapping = {
-                "😀":"happy", "🤣":"happy", "😅":"happy", "😊":"happy", "😍":"stars", "😗":"happy", "☺":"happy", "🤩":"stars", "😐":"happy", "🙄":"happy", "😥":"sad", "😯":"surprise", "🥱":"surprise", "😛":"happy", "🤤":"happy", "😔":"sad", "🤑":"happy", "🙁":"sad", "😟":"sad", "😭":"sad", "😨":"surprise", "😬":"happy", "🥵":"angry", "🤪":"angry", "😠":"angry", "😷":"sad", "🤢":"sad", "😇":"happy", "🤠":"happy", "🤫":"happy", "🤓":"happy"
+                "😀":"happy","🤣":"happy","😅":"happy","😊":"happy","😗":"happy","☺":"happy","😛":"happy","🤤":"happy","🤑":"happy","😇":"happy","🤠":"happy","🤫":"happy","🤓":"happy","😬":"happy","😐":"happy","🙄":"happy",
+                "🤩":"stars","😍":"stars",
+                "😥":"sad","😔":"sad","🙁":"sad","😟":"sad","😭":"sad","🤢":"sad","😷":"sad",
+                "😯":"surprise","😱":"surprise","😨":"surprise","😲":"surprise","🥱":"surprise",
+                "😠":"angry","😡":"angry","🥵":"angry","🤪":"angry"
             };
-
             for(let [e, tipo] of Object.entries(mapping)) {
                 let anim = tipo === 'angry' ? 'angry' : 'bounce';
-                let svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'>
-                    <path d='M1,1 h2 v2 h-2 z M5,1 h2 v2 h-2 z' fill='black'/>
-                    <path d='M3,3 h2 v3 h-2 z M2,4 h1 v3 h-1 z M5,4 h1 v3 h-1 z' fill='black'/>
-                    ${tipo==='sad'?'<path d="M1,3 h1 v3 h-1 z M6,3 h1 v3 h-1 z" fill="%2300eeff"/>':''}
-                    ${tipo==='stars'?'<path d="M1,2 h2 M2,1 v2" stroke="white" stroke-width="0.5"/><rect x="1.5" y="1.5" width="0.2" height="0.2" fill="yellow"/>':''}
-                    ${tipo==='happy'?'<path d="M1,4 h1 v2 h-1 z M6,4 h1 v2 h-1 z M2,6 h4 v1 h-4 z" fill="black"/>':''}
-                </svg>`;
+                let svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'><path d='M1,1 h2 v2 h-2 z M5,1 h2 v2 h-2 z' fill='black'/><path d='M3,3 h2 v3 h-2 z M2,4 h1 v3 h-1 z M5,4 h1 v3 h-1 z' fill='black'/>${tipo==='sad'?'<path d="M1,3 h1 v3 h-1 z M6,3 h1 v3 h-1 z" fill="%2300eeff"/>':''}${tipo==='stars'?'<path d="M1,2 h2 M2,1 v2" stroke="white" stroke-width="0.5"/><rect x="1.5" y="1.5" width="0.2" height="0.2" fill="yellow"/>':''}${tipo==='happy'?'<path d="M1,4 h1 v2 h-1 z M6,4 h1 v2 h-1 z M2,6 h4 v1 h-4 z" fill="black"/>':''}</svg>`;
                 t = t.split(e).join(`<span class="creeper-emoji ${anim}" style="background-image:url('data:image/svg+xml;base64,${btoa(svg)}')"></span>`);
             }
             return t;
