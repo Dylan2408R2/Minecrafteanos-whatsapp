@@ -3,97 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creeper P2P Chat - CAOS EDITION</title>
+    <title>Creeper Chat OS - Skin Edition</title>
     <link href="https://fonts.cdnfonts.com/css/minecraft-4" rel="stylesheet">
-    <!-- Librería para conexión directa entre navegadores -->
+    <!-- PeerJS para Chat P2P sin servidor -->
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        :root { --mc-green: #52ad32; --mc-dark: #1a1a1a; --mc-gui: #c6c6c6; }
-        body { background-color: var(--mc-dark); color: white; font-family: 'Minecraft', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        :root { --green: #52ad32; --dark: #1a1a1a; --gui: #c6c6c6; --tnt: #ff3333; }
         
-        .box { background: #4a4a4a; border: 5px solid #000; padding: 20px; box-shadow: 10px 10px 0px var(--mc-green); text-align: center; max-width: 500px; width: 90%; }
-        
-        input { font-family: 'Minecraft', sans-serif; padding: 10px; border: 3px solid #000; background: #222; color: #00ff00; margin: 5px; outline: none; width: 80%; }
-        
-        button { font-family: 'Minecraft', sans-serif; background: var(--mc-gui); border: 3px solid #fff; border-right-color: #555; border-bottom-color: #555; padding: 10px 20px; cursor: pointer; margin: 5px; }
-        button:hover { background: #eee; }
+        body { 
+            background-color: var(--dark); 
+            color: white; 
+            font-family: 'Minecraft', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden;
+        }
 
-        #chat-screen { display: none; width: 95%; max-width: 800px; height: 90vh; flex-direction: column; }
-        #messages { flex-grow: 1; background: rgba(0,0,0,0.8); border: 4px solid var(--mc-gui); margin-bottom: 10px; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; text-align: left; }
-        
-        .msg { background: #333; padding: 10px; border-left: 5px solid var(--mc-green); font-size: 1.2rem; }
-        .msg b { color: var(--mc-green); display: block; font-size: 0.8rem; }
+        .window { 
+            background: #4a4a4a; 
+            border: 5px solid #000; 
+            padding: 25px; 
+            box-shadow: 10px 10px 0px var(--green); 
+            text-align: center; 
+            width: 90%; 
+            max-width: 500px;
+        }
 
-        /* ENGINE CREEPER ANIMADO */
-        .creeper { display: inline-block; width: 32px; height: 32px; vertical-align: middle; background-color: #52ad32; background-size: 100% 100%; image-rendering: pixelated; margin: 0 2px; }
+        input { 
+            font-family: 'Minecraft', sans-serif; 
+            padding: 12px; 
+            border: 3px solid #000; 
+            background: #222; 
+            color: #00ff00; 
+            margin: 10px 0; 
+            outline: none; 
+            width: 90%; 
+        }
+
+        button { 
+            font-family: 'Minecraft', sans-serif; 
+            background: var(--gui); 
+            border: 3px solid #fff; 
+            border-right-color: #555; 
+            border-bottom-color: #555; 
+            padding: 12px 24px; 
+            cursor: pointer; 
+            margin-top: 10px;
+        }
+
+        button:active { border: 3px solid #555; border-right-color: #fff; border-bottom-color: #fff; }
+
+        /* --- PANTALLA DE CHAT --- */
+        #chat-screen { display: none; width: 95%; max-width: 900px; height: 90vh; flex-direction: column; }
+        
+        #messages { 
+            flex-grow: 1; 
+            background: rgba(0,0,0,0.85); 
+            border: 5px solid var(--gui); 
+            margin-bottom: 10px; 
+            overflow-y: auto; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px;
+        }
+
+        .message-row { display: flex; align-items: flex-start; gap: 12px; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+        .avatar { width: 48px; height: 48px; border: 3px solid #000; image-rendering: pixelated; }
+
+        .msg-content { background: #333; padding: 10px; border-radius: 2px; flex-grow: 1; border-left: 4px solid var(--green); }
+        .user-tag { color: var(--green); font-size: 0.8rem; margin-bottom: 5px; display: block; }
+        .text { font-size: 1.3rem; line-height: 1.6; }
+
+        /* --- CREEPER ENGINE --- */
+        .creeper { display: inline-block; width: 36px; height: 36px; vertical-align: middle; background-size: 100% 100%; image-rendering: pixelated; margin: 0 3px; background-color: var(--green); }
         .anim-bounce { animation: bounce 1s infinite; }
-        .anim-angry { animation: flash 0.4s infinite alternate, shake 0.1s infinite; }
+        .anim-angry { animation: flash TNT 0.4s infinite alternate, shake 0.1s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @keyframes flash { from { background-color: #52ad32; } to { background-color: #ff3333; } }
+        @keyframes flash { from { background-color: var(--green); } to { background-color: var(--tnt); } }
         @keyframes shake { 0% { transform: translate(1px); } 100% { transform: translate(-1px); } }
     </style>
 </head>
 <body>
 
-    <!-- PASO 1: LOGIN -->
-    <div id="login-step" class="box">
-        <h1 style="color: var(--mc-green);">CREEPER CHAT</h1>
-        <input type="text" id="username" placeholder="Tu nombre de usuario...">
+    <!-- PASO 1: LOGIN + CONTRASEÑA -->
+    <div id="login-step" class="window">
+        <h1 style="color: var(--green);">CREEPER AUTH</h1>
+        <input type="text" id="username" placeholder="Minecraft Username (NameMC)">
+        <input type="password" id="password" placeholder="Contraseña Secreta">
         <br>
-        <button onclick="startConnection()">SIGUIENTE</button>
+        <button onclick="checkAuth()">ENTRAR AL MUNDO</button>
     </div>
 
-    <!-- PASO 2: CONEXIÓN -->
-    <div id="connect-step" class="box" style="display:none;">
-        <h2 id="my-id-display">Generando ID...</h2>
-        <p style="font-size: 0.7rem;">DALE ESTE ID A TUS AMIGOS:</p>
-        <input type="text" id="peer-id-input" readonly onclick="this.select()">
-        <hr>
-        <p style="font-size: 0.7rem;">O PEGA EL ID DE UN AMIGO:</p>
-        <input type="text" id="dest-id-input" placeholder="ID del amigo...">
+    <!-- PASO 2: CONEXIÓN P2P -->
+    <div id="connect-step" class="window" style="display:none;">
+        <h2 id="status">Generando tu ID...</h2>
+        <input type="text" id="my-id" readonly onclick="this.select()" title="Copia esto">
+        <p style="font-size: 0.7rem; color: #aaa;">DALE ESTE ID A TU AMIGO O PEGA EL SUYO ABAJO:</p>
+        <input type="text" id="peer-id-input" placeholder="Pegar ID de amigo aquí...">
         <br>
-        <button onclick="connectToFriend()">CONECTARSE</button>
+        <button onclick="connectToFriend()">CONECTARSE CON AMIGO</button>
     </div>
 
-    <!-- PASO 3: CHAT -->
+    <!-- PASO 3: CHAT ROOM -->
     <div id="chat-screen">
         <div id="messages"></div>
-        <div style="display:flex;">
-            <input type="text" id="msg-input" placeholder="Escribe un mensaje...">
-            <button onclick="sendMsg()">ENVIAR</button>
+        <div style="display:flex; gap: 10px;">
+            <input type="text" id="msg-input" placeholder="Habla aquí (usa emojis 😍 😠)..." style="margin:0;">
+            <button onclick="sendMsg()" style="margin:0;">ENVIAR</button>
         </div>
     </div>
 
     <script>
-        let peer, conn, myName;
-        const msgInput = document.getElementById('msg-input');
-        const messagesDiv = document.getElementById('messages');
+        // CONFIGURACIÓN
+        const SECRET_PASS = "creeper123"; // CAMBIA ESTO A TU GUSTO
+        let peer, conn, myName, myAvatar;
 
-        // 1. Iniciar PeerJS
-        function startConnection() {
+        // 1. AUTENTICACIÓN Y CARGA DE SKIN
+        function checkAuth() {
+            const pass = document.getElementById('password').value;
             myName = document.getElementById('username').value;
-            if(!myName) return alert("Poné un nombre!");
 
-            peer = new Peer(); // PeerJS usa sus propios servidores gratuitos para encontrarnos
+            if (pass !== SECRET_PASS) return alert("Contraseña incorrecta, ¡BOOM!");
+            if (!myName) return alert("Necesitas un nombre de NameMC");
+
+            // API de Rostros (mc-heads es excelente para esto)
+            myAvatar = `https://mc-heads.net/avatar/${myName}`;
+            
+            startPeer();
+        }
+
+        // 2. INICIAR PEERJS
+        function startPeer() {
+            peer = new Peer(); 
             
             peer.on('open', (id) => {
                 document.getElementById('login-step').style.display = 'none';
                 document.getElementById('connect-step').style.display = 'block';
-                document.getElementById('peer-id-input').value = id;
-                document.getElementById('my-id-display').innerText = "TU ID: " + id.substring(0,5);
+                document.getElementById('my-id').value = id;
+                document.getElementById('status').innerText = "LISTO PARA CONECTAR";
             });
 
-            // Escuchar conexiones entrantes (si vos sos el Host)
+            // Escuchar si alguien se conecta a nosotros
             peer.on('connection', (connection) => {
                 conn = connection;
                 setupChat();
             });
         }
 
-        // 2. Conectarse a alguien
         function connectToFriend() {
-            const destId = document.getElementById('dest-id-input').value;
-            conn = peer.connect(destId);
+            const friendId = document.getElementById('peer-id-input').value;
+            if (!friendId) return alert("Pega el ID de alguien!");
+            conn = peer.connect(friendId);
             setupChat();
         }
 
@@ -102,41 +168,22 @@
             document.getElementById('chat-screen').style.display = 'flex';
 
             conn.on('data', (data) => {
-                renderMsg(data.user, data.text);
+                renderMsg(data.user, data.text, data.avatar);
             });
-            
+
             conn.on('open', () => {
-                renderMsg("SISTEMA", "¡Conectado con éxito!");
+                renderMsg("SISTEMA", "¡Conexión establecida! Cuidado con los Creepers.", "https://mc-heads.net/avatar/MHF_Creeper");
             });
         }
 
-        // 3. Sistema de Emojis Creeperizado
-        function creeperize(texto) {
-            const faces = {
-                "🤩": "stars", "😍": "stars", "😯": "surprise", 
-                "😭": "sad", "😠": "angry", "😀": "happy"
-            };
-            const todos = ["🤣","😅","😊","😗","☺","🤩","😐","🙄","😥","😯","🥱","😛","🤤","😔","🤑","🙁","😟","😭","😨","😬","🥵","🤪","😠","😷","🤢","😇","🤠","🤫","🤓"];
-
-            for (const [emoji, tipo] of Object.entries(faces)) {
-                let anim = tipo === "angry" ? "anim-angry" : "anim-bounce";
-                const img = getCreeperFaceSVG(tipo);
-                texto = texto.split(emoji).join(`<span class="creeper ${anim}" style='background-image: ${img}'></span>`);
-            }
-            todos.forEach(emoji => {
-                const img = getCreeperFaceSVG("normal");
-                texto = texto.split(emoji).join(`<span class="creeper anim-bounce" style='background-image: ${img}'></span>`);
-            });
-            return texto;
-        }
-
+        // 3. CREEPER EMOJI ENGINE
         function getCreeperFaceSVG(tipo) {
             let eyes = "M1,1 h2 v2 h-2 z M5,1 h2 v2 h-2 z";
             let mouth = "M3,3 h2 v3 h-2 z M2,4 h1 v3 h-1 z M5,4 h1 v3 h-1 z";
             let ex = "";
             if (tipo === "surprise") mouth = "M3,4 h2 v3 h-2 z M2,6 h4 v1 h-4 z";
             if (tipo === "stars") {
-                ex = `<rect x="1" y="1" width="2" height="2" fill="%23b0b0ff"/><path d="M1,2 h2 M2,1 v2" stroke="white" stroke-width="0.5"/><rect x="5" y="1" width="2" height="2" fill="%23b0b0ff"/><path d="M5,2 h2 M6,1 v2" stroke="white" stroke-width="0.5"/>`;
+                ex = `<rect x="1" y="1" width="2" height="2" fill="%23b0b0ff"/><path d="M1,2 h2 M2,1 v2" stroke="white" stroke-width="0.5"/><rect x="1.5" y="1.5" width="0.2" height="0.2" fill="yellow"/><rect x="5,1" width="2" height="2" fill="%23b0b0ff"/><path d="M5,2 h2 M6,1 v2" stroke="white" stroke-width="0.5"/><rect x="5.5" y="1.5" width="0.2" height="0.2" fill="yellow"/>`;
                 eyes = "";
             }
             if (tipo === "sad") ex = `<path d="M1,3 h1 v3 h-1 z M6,3 h1 v3 h-1 z" fill="%2300eeff"/>`;
@@ -146,24 +193,47 @@
             return `url("data:image/svg+xml;base64,${btoa(svg)}")`;
         }
 
-        // 4. Enviar y Renderizar
+        function creeperize(text) {
+            const map = { "🤩":"stars","😍":"stars","😯":"surprise","😭":"sad","😠":"angry","😀":"happy" };
+            const others = ["🤣","😅","😊","😗","☺","😐","🙄","😥","🥱","😛","🤤","😔","🤑","🙁","😟","😨","😬","🥵","🤪","😷","🤢","😇","🤠","🤫","🤓"];
+            
+            for (const [emoji, tipo] of Object.entries(map)) {
+                let anim = tipo === "angry" ? "anim-angry" : "anim-bounce";
+                text = text.split(emoji).join(`<span class="creeper ${anim}" style='background-image: ${getCreeperFaceSVG(tipo)}'></span>`);
+            }
+            others.forEach(e => {
+                text = text.split(e).join(`<span class="creeper anim-bounce" style='background-image: ${getCreeperFaceSVG("normal")}'></span>`);
+            });
+            return text;
+        }
+
+        // 4. MENSAJERÍA
         function sendMsg() {
-            const text = msgInput.value;
-            if(!text || !conn) return;
-            conn.send({ user: myName, text: text });
-            renderMsg("VOS", text);
-            msgInput.value = "";
+            const input = document.getElementById('msg-input');
+            if (!input.value || !conn) return;
+            
+            const data = { user: myName, text: input.value, avatar: myAvatar };
+            conn.send(data);
+            renderMsg(myName, input.value, myAvatar);
+            input.value = "";
         }
 
-        function renderMsg(user, text) {
+        function renderMsg(user, text, avatarUrl) {
+            const messages = document.getElementById('messages');
             const div = document.createElement('div');
-            div.className = "msg";
-            div.innerHTML = `<b>${user}</b> <span>${creeperize(text)}</span>`;
-            messagesDiv.appendChild(div);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            div.className = "message-row";
+            div.innerHTML = `
+                <img src="${avatarUrl}" class="avatar" onerror="this.src='https://mc-heads.net/avatar/Steve'">
+                <div class="msg-content">
+                    <span class="user-tag">${user}</span>
+                    <div class="text">${creeperize(text)}</div>
+                </div>
+            `;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
         }
 
-        msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMsg(); });
+        document.getElementById('msg-input').addEventListener('keypress', (e) => { if(e.key==='Enter') sendMsg(); });
     </script>
 </body>
 </html>
