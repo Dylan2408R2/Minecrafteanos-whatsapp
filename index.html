@@ -208,4 +208,133 @@
             "😨": { e: "M1,1 h2 v2 h-2 z M5,1 h2 v2 h-2 z", m: "M3,4 h2 v3 h-2 z", ex: "<rect x='1' y='1' width='2' height='2' fill='white'/><rect x='5' y='1' width='2' height='2' fill='white'/>" },
             "😬": { e: "M1,2 h2 v2 h-2 z M5,2 h2 v2 h-2 z", m: "M2,5 h4 v2 h-4 z", ex: "<rect x='2' y='5' width='4' height='2' fill='white'/>" },
             "🥵": { e: "M1,2 h2 v1 h-2 z M5,2 h2 v1 h-2 z", m: "M2,5 h4 v1 h-4 z", bg: "#ff4400" },
-            "🤪": { e: "M1,1 h1 v1 h-1 z M5,0 h2 v2 h-2 z", m: "M2,5 h4 v1 h
+            "🤪": { e: "M1,1 h1 v1 h-1 z M5,0 h2 v2 h-2 z", m: "M2,5 h4 v1 h-4 z", ex: "<rect x='3' y='6' width='2' height='2' fill='red'/>" },
+            "😠": { e: "M1,2 h2 v2 h-2 z M5,2 h2 v2 h-2 z", m: "M2,5 h4 v1 h-4 z", ani: "anim-angry", ex: "<path d='M1,1 l2,1 M7,1 l-2,1' stroke='black' stroke-width='1.5'/>" },
+            "😷": { e: "M1,1 h2 v2 h-2 z M5,1 h2 v2 h-2 z", m: "M2,4 h4 v4 h-4 z", ex: "<rect x='2' y='4' width='4' height='4' fill='white'/>" },
+            "🤢": { e: "M1,1 h2 v2 h-2 z M5,1 h2 v2 h-2 z", m: "M2,5 h4 v2 h-4 z", bg: "#88aa00" },
+            "😇": { e: "M1,2 h2 v2 h-2 z M5,2 h2 v2 h-2 z", m: "M2,5 h4 v1 h-4 z", ex: "<rect x='2' y='0' width='4' height='1' fill='yellow'/>" },
+            "🤠": { e: "M1,2 h2 v2 h-2 z M5,2 h2 v1 h-2 z", m: "M2,5 h4 v1 h-4 z", ex: "<rect x='0' y='0' width='8' height='2' fill='#663300'/>" },
+            "🤫": { e: "M1,2 h2 v2 h-2 z M5,2 h2 v2 h-2 z", m: "M2,5 h4 v1 h-4 z", ex: "<rect x='3' y='4' width='2' height='4' fill='#ffccaa' opacity='0.8'/>" },
+            "🤓": { e: "M1,2 h2 v2 h-2 z M5,2 h1 v2 h-1 z", m: "M2,6 h4 v1 h-4 z", ex: "<rect x='0' y='1' width='4' height='3' fill='none' stroke='black'/><rect x='4' y='1' width='4' height='3' fill='none' stroke='black'/>" }
+        };
+
+        function setM(m) { 
+            mode = m; 
+            document.getElementById('b-l').style.background = m==='login'?'var(--gui)':'#333'; 
+            document.getElementById('b-r').style.background = m==='reg'?'var(--gui)':'#333'; 
+        }
+
+        function upAv() { 
+            document.getElementById('av-p').src = `https://mc-heads.net/avatar/${document.getElementById('u-in').value || 'Steve'}`; 
+        }
+        
+        function goAuth() {
+            const u = document.getElementById('u-in').value.trim(); 
+            const p = document.getElementById('p-in').value;
+            if(!u || !p) return alert("Completa los datos");
+            const db = JSON.parse(localStorage.getItem('m_users') || '{}');
+            if(mode === 'reg') { 
+                db[u.toLowerCase()] = p; 
+                localStorage.setItem('m_users', JSON.stringify(db)); 
+                alert("Registrado"); 
+                setM('login'); 
+            } else { 
+                if(db[u.toLowerCase()] !== p) return alert("Error"); 
+                user = u; avatar = `https://mc-heads.net/avatar/${u}`; 
+                startL(); 
+            }
+        }
+
+        function startL() {
+            document.getElementById('auth-screen').style.display='none';
+            document.getElementById('loading-screen').style.display='flex';
+            document.getElementById('btn-novedades').style.display = 'flex';
+            loadLocalNews();
+
+            const bar = document.getElementById('bar-fill');
+            bar.style.width = "40%";
+
+            peer = new Peer();
+            peer.on('open', id => {
+                bar.style.width = "100%";
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.display='none';
+                    document.getElementById('connect-screen').style.display='block';
+                    document.getElementById('my-id').value = id;
+                }, 800);
+            });
+            peer.on('connection', connection => {
+                conn = connection;
+                setupChat();
+            });
+        }
+
+        function connP() {
+            const f = document.getElementById('f-id').value.trim();
+            if(!f) return alert("ID vacío");
+            conn = peer.connect(f);
+            setupChat();
+        }
+        
+        function setupChat() {
+            document.getElementById('connect-screen').style.display='none'; 
+            document.getElementById('chat-screen').style.display='flex'; 
+            if(user.toLowerCase() === 'dylangamer2345') document.getElementById('admin-panel').style.display='block';
+            
+            conn.on('data', d => {
+                if(d.type === 'nov') {
+                    document.getElementById('txt-novedad').innerText = d.text;
+                    localStorage.setItem('last_news', d.text);
+                }
+                else add(d.u, d.t, d.a);
+            });
+            conn.on('open', () => add("SISTEMA", "¡Conectado!", "https://mc-heads.net/avatar/MHF_Creeper"));
+        }
+
+        function showNovedades() {
+            loadLocalNews();
+            document.getElementById('modal-novedades').style.display = 'flex';
+        }
+
+        function loadLocalNews() {
+            const saved = localStorage.getItem('last_news');
+            if(saved) document.getElementById('txt-novedad').innerText = saved;
+        }
+
+        function postNov() { 
+            const t = document.getElementById('ad-in').value; 
+            if(!t) return;
+            localStorage.setItem('last_news', t);
+            if(conn) conn.send({type:'nov', text:t});
+            document.getElementById('txt-novedad').innerText = t; 
+            alert("Noticia enviada"); 
+        }
+
+        function send() { 
+            const i = document.getElementById('c-in'); 
+            if(!i.value) return; 
+            conn.send({u:user, t:i.value, a:avatar}); 
+            add(user, i.value, avatar); i.value=""; 
+        }
+
+        function add(u, t, a) {
+            const m = document.getElementById('messages'); 
+            const d = document.createElement('div'); 
+            d.className = "msg-row";
+            d.innerHTML = `<img src="${a}" class="avatar" onerror="this.src='https://mc-heads.net/avatar/Steve'"><div class="msg-box"><b>${u}</b><br>${creeperize(t)}</div>`;
+            m.appendChild(d); m.scrollTop = 9999;
+        }
+
+        function creeperize(t) {
+            for(let [emoji, data] of Object.entries(EMOJI_MAP)) {
+                let svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'><rect width='8' height='8' fill='${data.bg || '#52ad32'}'/><path d='${data.e}' fill='black'/><path d='${data.m}' fill='black'/>${data.ex || ''}</svg>`;
+                t = t.split(emoji).join(`<span class="creeper-emoji ${data.ani || 'anim-bounce'}" style="background-image:url('data:image/svg+xml;base64,${btoa(svg)}')"></span>`);
+            }
+            return t;
+        }
+
+        function copy() { navigator.clipboard.writeText(document.getElementById('my-id').value); alert("Copiado"); }
+        function share() { if(navigator.share) navigator.share({ text: document.getElementById('my-id').value }); else copy(); }
+    </script>
+</body>
+</html>
